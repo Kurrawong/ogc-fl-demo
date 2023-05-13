@@ -1,0 +1,101 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Town",
+        "elevation": "0 m",
+        "country": "South Africa"
+      },
+      "geometry": {
+        "coordinates": [
+          18.416774422329922,
+          -33.93044545314443
+        ],
+        "type": "Point"
+      },
+      "id": 0
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Maseru",
+        "elevation": "1,600 m",
+        "country": "Lesotho"
+      },
+      "geometry": {
+        "coordinates": [
+          27.480793218322503,
+          -29.308695711881292
+        ],
+        "type": "Point"
+      },
+      "id": 1
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Johannesburg",
+        "elevation": "1,753 m",
+        "country": "South Africa"
+      },
+      "geometry": {
+        "coordinates": [
+          28.047358315354302,
+          -26.209445954580403
+        ],
+        "type": "Point"
+      },
+      "id": 2
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Pretoria",
+        "elevation": "1,339 m",
+        "country": "South Africa"
+      },
+      "geometry": {
+        "coordinates": [
+          28.191810578241075,
+          -25.74341952410161
+        ],
+        "type": "Point"
+      },
+      "id": 3
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mbabane",
+        "elevation": "1,243 m",
+        "country": "Eswatini"
+      },
+      "geometry": {
+        "coordinates": [
+          31.140893033253633,
+          -26.322494907049723
+        ],
+        "type": "Point"
+      },
+      "id": 4
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Upington",
+        "elevation": "835 m",
+        "country": "South Africa"
+      },
+      "geometry": {
+        "coordinates": [
+          21.24218804301296,
+          -28.455734584573683
+        ],
+        "type": "Point"
+      },
+      "id": 5
+    }
+  ]
+}
