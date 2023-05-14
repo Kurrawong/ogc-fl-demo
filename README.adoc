@@ -1,0 +1,76 @@
+= OGC Feature Labels Demonstrator
+
+== Property Behaviours
+
+|===
+| ID | Behaviour |  Description
+
+| PB01 | Labelled by UI | The property has a human-readable label provided by the UI
+| PB02 | Not labelled by UI | The property does not have a human-readable label provided by the UI
+| PB03 | Unclickable | The property cannot be clicked on
+| PB04 | Does not Resolve | Clicking on the property does not resolve to anywhere
+| PB05 | Resolves | Clicking on the property resolves to a definition
+| PB06 | Resolves - human | Clicking on the property resolves to a human-readable definition
+| PB07 | Resolves - machine | Clicking on the property resolves to a machine-readable definition
+| PB08 | Prompted definition | Hovering over the property provides a pop-up definition
+|===
+
+== Property Definition Types
+
+|===
+| ID | Type | Description
+
+| PD01 | Not defined | The property is not defined
+| PD02 | Public Definition - conneg | The property is publicly defined and the definition is available in human- and machine-readable forms accessible via Content Negotiation
+| PD03 | Public Definition - human | The property is publicly defined and the definition is available in human-readable form
+| PD04 | Public Definition - machine | The property is publicly defined and the definition is available in machine-readable form
+| PD05 | Public Definition - separate links | The property is publicly defined and the definition is available in human- and machine-readable forms with the property IRI resolving to machine-readable form and an unrelated link resolving to human-readable form
+| PD06 | Public Definition - hash | The property is publicly defined with a has IRI
+| PD07 | Public Definition - slash | The property is publicly defined with a has IRI
+|===
+
+== Property Definition Sources
+
+|===
+| ID | Name
+
+| X | No Source
+| OGC | Open Geospatial Consortium
+| W3C | World Wide Web Consortium
+| SDO | schema.org
+| GSO | Geoscience Ontology
+|===
+
+== Properties by Dataset
+
+* `geo:` - `+http://www.opengis.net/ont/geosparql#+`
+* `sdo:` - `+https://schema.org/+`
+
+=== Cities
+
+|===
+| IRI | Label |  Behaviours | Source
+
+| `sdo:name` | name | PB02, PD01 | SDO
+| `-` | country |  PB01, PB03 | X
+| `sdo:elevation` | elevation | PB01, PB06, PB07, PD05 | SDO
+|===
+
+=== SA3s
+
+|===
+| IRI | Label |  Behaviours | Source
+
+| `-` | IRI | PB01, PB06, PB07, PD05 | X
+| `sdo:name` | name | PB02, PD01 | SDO
+| `geo:hasMetricArea` | area | PB01, PD05 | OGC
+| `geo:sfWithin` | within | PB01, PD05 | OGC
+|===
+
+=== Queensland Geology
+
+|===
+| IRI | Label |  Behaviours
+
+| `-` | `-` | `-`
+|===

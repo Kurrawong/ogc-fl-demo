@@ -1,0 +1,487 @@
+{
+  "type": "FeatureCollection",
+  "name": "Statistical Areas 3s of the ACT",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "BarrolkaDepression",
+        "name": "Barrolka Depression",
+        "younger": "Devonian",
+        "older": "Devonian",
+        "type": "Depression"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              141.252249,
+              -26.951228
+            ],
+            [
+              141.252249,
+              -25.72558
+            ],
+            [
+              142.296788,
+              -25.72558
+            ],
+            [
+              142.296788,
+              -26.951228
+            ],
+            [
+              141.252249,
+              -26.951228
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "CentralianSuperbasin",
+        "name": "Centralian Superbasin",
+        "younger": "Devonian",
+        "older": "Neoproterozoic",
+        "type": "Superbasifn"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.995599,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -24.621167
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "CooperBasin",
+        "name": "Cooper Basin",
+        "younger": "Triassic",
+        "older": "Permian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              140.361215,
+              -28.835491
+            ],
+            [
+              140.361215,
+              -24.722271
+            ],
+            [
+              144.106042,
+              -24.722271
+            ],
+            [
+              144.106042,
+              -28.835491
+            ],
+            [
+              140.361215,
+              -28.835491
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "EromangaBasin",
+        "name": "Eromanga Basin",
+        "younger": "Cenomanian",
+        "older": "Rhaetian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.997899,
+              -28.999099
+            ],
+            [
+              137.997899,
+              -18.865479
+            ],
+            [
+              147.848938,
+              -18.865479
+            ],
+            [
+              147.848938,
+              -28.999099
+            ],
+            [
+              137.997899,
+              -28.999099
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "EromangaBasin",
+        "name": "Eromanga Basin",
+        "younger": "Cenomanian",
+        "older": "Rhaetian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.997899,
+              -28.999099
+            ],
+            [
+              137.997899,
+              -18.865479
+            ],
+            [
+              147.848938,
+              -18.865479
+            ],
+            [
+              147.848938,
+              -28.999099
+            ],
+            [
+              137.997899,
+              -28.999099
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "GalileeBasin",
+        "name": "Galilee Basin",
+        "younger": "MiddleTriassic",
+        "older": "UpperMississippian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              141.133538,
+              -27.118561
+            ],
+            [
+              141.133538,
+              -20.191555
+            ],
+            [
+              147.78057,
+              -20.191555
+            ],
+            [
+              147.78057,
+              -27.118561
+            ],
+            [
+              141.133538,
+              -27.118561
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "GeorginaBasin",
+        "name": "Georgina Basin",
+        "younger": "Devonian",
+        "older": "Neoproterozoic",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.995599,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -24.621167
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "GeorginaBasin",
+        "name": "Georgina Basin",
+        "younger": "Devonian",
+        "older": "Neoproterozoic",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.995599,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -24.621167
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "GeorginaBasin",
+        "name": "Georgina Basin",
+        "younger": "Devonian",
+        "older": "Neoproterozoic",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.995599,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -18.603222
+            ],
+            [
+              141.318563,
+              -24.621167
+            ],
+            [
+              137.995599,
+              -24.621167
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "NorthAustralianCraton",
+        "name": "North Australian Craton",
+        "younger": "Mesoproterozoic",
+        "older": "Paleoproterozoic",
+        "type": "Craton"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.994699,
+              -24.767177
+            ],
+            [
+              137.994699,
+              -10.690817
+            ],
+            [
+              145.157842,
+              -10.690817
+            ],
+            [
+              145.157842,
+              -24.767177
+            ],
+            [
+              137.994699,
+              -24.767177
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "WarburtonBasin",
+        "name": "Warburton Basin",
+        "younger": "MiddleOrdovician",
+        "older": "Cambrian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.9983,
+              -28.960797
+            ],
+            [
+              137.9983,
+              -24.294492
+            ],
+            [
+              143.549277,
+              -24.294492
+            ],
+            [
+              143.549277,
+              -28.960797
+            ],
+            [
+              137.9983,
+              -28.960797
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "WarburtonBasin",
+        "name": "Warburton Basin",
+        "younger": "MiddleOrdovician",
+        "older": "Cambrian",
+        "type": "Basin"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.9983,
+              -28.960797
+            ],
+            [
+              137.9983,
+              -24.294492
+            ],
+            [
+              143.549277,
+              -24.294492
+            ],
+            [
+              143.549277,
+              -28.960797
+            ],
+            [
+              137.9983,
+              -28.960797
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "iri": "ThomsonOrogen",
+        "name": "Thomson Orogen",
+        "younger": "Silurian",
+        "older": "Neoproterozoic",
+        "type": "Orogen"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              137.9983,
+              -28.999099
+            ],
+            [
+              137.9983,
+              -18.78346
+            ],
+            [
+              149.441987,
+              -18.78346
+            ],
+            [
+              149.441987,
+              -28.999099
+            ],
+            [
+              137.9983,
+              -28.999099
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
