@@ -70,7 +70,18 @@
 === Queensland Geology
 
 |===
-| IRI | Label |  Behaviours
+| IRI | Label |  Behaviours | Source
 
-| `-` | `-` | `-`
+| `-` | IRI | PB01, PB06, PB07, PD05 | X
+| `sdo:name` | name | PB02, PD01 | SDO
+| `sdo:additionalType` | additional type | PB02, PD01 | SDO
+| `gso:occupiesTimeIndirectly/time:intervalFinishedBy` | younger | PB05, PB02, PD05 | GSO, W3C
+| `gso:occupiesTimeIndirectly/time:intervalStartedBy` | older | PB05, PB02, PD05 | GSO, W3C
 |===
+
+`gso:occupiesTimeIndirectly/time:intervalFinishedBy`:
+
+* https://loop3d.github.io/GKM/common.html#occupiesTimeIndirectly
+* https://w3id.org/gso/common/occupiesTimeIndirectly
+* https://www.w3.org/TR/owl-time/#time:intervalFinishedBy
+* http://www.w3.org/2006/time#intervalFinishedBy
