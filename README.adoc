@@ -85,3 +85,7 @@
 * https://w3id.org/gso/common/occupiesTimeIndirectly
 * https://www.w3.org/TR/owl-time/#time:intervalFinishedBy
 * http://www.w3.org/2006/time#intervalFinishedBy
+
+== Property Context
+
+The context file `data/_context.json` supplies all context known within this project.

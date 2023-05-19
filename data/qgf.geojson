@@ -7,8 +7,8 @@
       "properties": {
         "iri": "BarrolkaDepression",
         "name": "Barrolka Depression",
-        "younger": "Devonian",
-        "older": "Devonian",
+        "youngestTime": "Devonian",
+        "oldestTime": "Devonian",
         "type": "Depression"
       },
       "geometry": {
@@ -44,8 +44,8 @@
       "properties": {
         "iri": "CentralianSuperbasin",
         "name": "Centralian Superbasin",
-        "younger": "Devonian",
-        "older": "Neoproterozoic",
+        "youngestTime": "Devonian",
+        "oldestTime": "Neoproterozoic",
         "type": "Superbasifn"
       },
       "geometry": {
@@ -81,8 +81,8 @@
       "properties": {
         "iri": "CooperBasin",
         "name": "Cooper Basin",
-        "younger": "Triassic",
-        "older": "Permian",
+        "youngestTime": "Triassic",
+        "oldestTime": "Permian",
         "type": "Basin"
       },
       "geometry": {
@@ -118,8 +118,8 @@
       "properties": {
         "iri": "EromangaBasin",
         "name": "Eromanga Basin",
-        "younger": "Cenomanian",
-        "older": "Rhaetian",
+        "youngestTime": "Cenomanian",
+        "oldestTime": "Rhaetian",
         "type": "Basin"
       },
       "geometry": {
@@ -155,8 +155,8 @@
       "properties": {
         "iri": "EromangaBasin",
         "name": "Eromanga Basin",
-        "younger": "Cenomanian",
-        "older": "Rhaetian",
+        "youngestTime": "Cenomanian",
+        "oldestTime": "Rhaetian",
         "type": "Basin"
       },
       "geometry": {
@@ -192,8 +192,8 @@
       "properties": {
         "iri": "GalileeBasin",
         "name": "Galilee Basin",
-        "younger": "MiddleTriassic",
-        "older": "UpperMississippian",
+        "youngestTime": "MiddleTriassic",
+        "oldestTime": "UpperMississippian",
         "type": "Basin"
       },
       "geometry": {
@@ -229,8 +229,8 @@
       "properties": {
         "iri": "GeorginaBasin",
         "name": "Georgina Basin",
-        "younger": "Devonian",
-        "older": "Neoproterozoic",
+        "youngestTime": "Devonian",
+        "oldestTime": "Neoproterozoic",
         "type": "Basin"
       },
       "geometry": {
@@ -266,8 +266,8 @@
       "properties": {
         "iri": "GeorginaBasin",
         "name": "Georgina Basin",
-        "younger": "Devonian",
-        "older": "Neoproterozoic",
+        "youngestTime": "Devonian",
+        "oldestTime": "Neoproterozoic",
         "type": "Basin"
       },
       "geometry": {
@@ -303,8 +303,8 @@
       "properties": {
         "iri": "GeorginaBasin",
         "name": "Georgina Basin",
-        "younger": "Devonian",
-        "older": "Neoproterozoic",
+        "youngestTime": "Devonian",
+        "oldestTime": "Neoproterozoic",
         "type": "Basin"
       },
       "geometry": {
@@ -340,8 +340,8 @@
       "properties": {
         "iri": "NorthAustralianCraton",
         "name": "North Australian Craton",
-        "younger": "Mesoproterozoic",
-        "older": "Paleoproterozoic",
+        "youngestTime": "Mesoproterozoic",
+        "oldestTime": "Paleoproterozoic",
         "type": "Craton"
       },
       "geometry": {
@@ -377,8 +377,8 @@
       "properties": {
         "iri": "WarburtonBasin",
         "name": "Warburton Basin",
-        "younger": "MiddleOrdovician",
-        "older": "Cambrian",
+        "youngestTime": "MiddleOrdovician",
+        "oldestTime": "Cambrian",
         "type": "Basin"
       },
       "geometry": {
@@ -414,8 +414,8 @@
       "properties": {
         "iri": "WarburtonBasin",
         "name": "Warburton Basin",
-        "younger": "MiddleOrdovician",
-        "older": "Cambrian",
+        "youngestTime": "MiddleOrdovician",
+        "oldestTime": "Cambrian",
         "type": "Basin"
       },
       "geometry": {
@@ -451,8 +451,8 @@
       "properties": {
         "iri": "ThomsonOrogen",
         "name": "Thomson Orogen",
-        "younger": "Silurian",
-        "older": "Neoproterozoic",
+        "youngestTime": "Silurian",
+        "oldestTime": "Neoproterozoic",
         "type": "Orogen"
       },
       "geometry": {
