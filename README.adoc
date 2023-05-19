@@ -88,4 +88,4 @@
 
 == Property Context
 
-The context file `data/_context.json` supplies all context known within this project.
+The context file `data/_context.json` supplies all context known about properties (predicates for Features) within this project.
