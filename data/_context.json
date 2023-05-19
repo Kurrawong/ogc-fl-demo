@@ -24,12 +24,14 @@
     "description": "States that the subject SpatialObject is spatially within the object SpatialObject. DE-9IM: T*F**F***"
   },
   "youngestTime": {
+    "label": "Youngest Time",
     "chain": [
       "occupiesTimeIndirectly",
       "finishedBy"
     ]
   },
   "oldestTime": {
+    "label": "Oldest Time",
     "chain": [
       "occupiesTimeIndirectly",
       "startedBy"

@@ -1,11 +1,11 @@
 {
   "type": "FeatureCollection",
-  "name": "Statistical Areas 3s of the ACT",
+  "name": "Geological Features of Queensland",
   "features": [
     {
       "type": "Feature",
       "properties": {
-        "iri": "BarrolkaDepression",
+        "id": "qgf:BarrolkaDepression",
         "name": "Barrolka Depression",
         "youngestTime": "Devonian",
         "oldestTime": "Devonian",
@@ -42,7 +42,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "CentralianSuperbasin",
+        "id": "qgf:CentralianSuperbasin",
         "name": "Centralian Superbasin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
@@ -79,7 +79,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "CooperBasin",
+        "id": "qgf:CooperBasin",
         "name": "Cooper Basin",
         "youngestTime": "Triassic",
         "oldestTime": "Permian",
@@ -116,7 +116,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "EromangaBasin",
+        "id": "qgf:EromangaBasin",
         "name": "Eromanga Basin",
         "youngestTime": "Cenomanian",
         "oldestTime": "Rhaetian",
@@ -153,7 +153,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "EromangaBasin",
+        "id": "qgf:EromangaBasin",
         "name": "Eromanga Basin",
         "youngestTime": "Cenomanian",
         "oldestTime": "Rhaetian",
@@ -190,7 +190,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "GalileeBasin",
+        "id": "qgf:GalileeBasin",
         "name": "Galilee Basin",
         "youngestTime": "MiddleTriassic",
         "oldestTime": "UpperMississippian",
@@ -227,7 +227,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "GeorginaBasin",
+        "id": "qgf:GeorginaBasin",
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
@@ -264,7 +264,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "GeorginaBasin",
+        "id": "qgf:GeorginaBasin",
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
@@ -301,7 +301,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "GeorginaBasin",
+        "id": "qgf:GeorginaBasin",
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
@@ -338,7 +338,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "NorthAustralianCraton",
+        "id": "qgf:NorthAustralianCraton",
         "name": "North Australian Craton",
         "youngestTime": "Mesoproterozoic",
         "oldestTime": "Paleoproterozoic",
@@ -375,7 +375,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "WarburtonBasin",
+        "id": "qgf:WarburtonBasin",
         "name": "Warburton Basin",
         "youngestTime": "MiddleOrdovician",
         "oldestTime": "Cambrian",
@@ -412,7 +412,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "WarburtonBasin",
+        "id": "qgf:WarburtonBasin",
         "name": "Warburton Basin",
         "youngestTime": "MiddleOrdovician",
         "oldestTime": "Cambrian",
@@ -449,7 +449,7 @@
     {
       "type": "Feature",
       "properties": {
-        "iri": "ThomsonOrogen",
+        "id": "qgf:ThomsonOrogen",
         "name": "Thomson Orogen",
         "youngestTime": "Silurian",
         "oldestTime": "Neoproterozoic",
