@@ -1,0 +1,259 @@
+{
+  "@context": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "geojson": "https://purl.org/geojson/vocab#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  },
+  "@graph": [
+    {
+      "@id": "http://purl.org/geojson/vocab#",
+      "@type": "http://www.w3.org/2002/07/owl#Ontology",
+      "dc:creator": "Sean Gillies",
+      "dc:description": "A description of the RFC 7946 GeoJSON model. See https://github.com/geojson/geojson-ld for vocabulary developments.",
+      "dc:format": "application/rdf+xml",
+      "dc:rights": "This work is licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.",
+      "dc:title": "GeoJSON-LD vocabulary"
+    },
+    {
+      "@id": "geojson:FeatureCollection",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.3."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "FeatureCollection"
+      }
+    },
+    {
+      "@id": "geojson:Point",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.2."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Point"
+      }
+    },
+    {
+      "@id": "geojson:MultiLineString",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.5."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "MultiLineString"
+      }
+    },
+    {
+      "@id": "geojson:type",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "type"
+      }
+    },
+    {
+      "@id": "geojson:geometry",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3.2."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "geometry"
+      }
+    },
+    {
+      "@id": "geojson:properties",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3.2."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "properties"
+      }
+    },
+    {
+      "@id": "geojson:LineString",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.4."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "LineString"
+      }
+    },
+    {
+      "@id": "geojson:id",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3.2."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "id"
+      }
+    },
+    {
+      "@id": "geojson:Polygon",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.6."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Polygon"
+      }
+    },
+    {
+      "@id": "geojson:coordinates",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3.1.1."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "coordinates"
+      }
+    },
+    {
+      "@id": "geojson:bbox",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 5."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "bbox"
+      }
+    },
+    {
+      "@id": "geojson:Feature",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.2."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "Feature"
+      }
+    },
+    {
+      "@id": "geojson:GeometryCollection",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.8."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "GeometryCollection"
+      }
+    },
+    {
+      "@id": "geojson:MultiPolygon",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.7."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "MultiPolygon"
+      }
+    },
+    {
+      "@id": "geojson:MultiPoint",
+      "@type": "rdfs:Class",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "See RFC 7946 Section 3.1.3."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "MultiPoint"
+      }
+    },
+    {
+      "@id": "geojson:features",
+      "@type": "rdf:Property",
+      "rdfs:comment": {
+        "@language": "en",
+        "@value": "RFC 7946 Section 3.3."
+      },
+      "rdfs:isDefinedBy": {
+        "@id": "http://purl.org/geojson/vocab#"
+      },
+      "rdfs:label": {
+        "@language": "en",
+        "@value": "features"
+      }
+    }
+  ]
+}
