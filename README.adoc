@@ -89,3 +89,13 @@
 == Property Context
 
 The context file `data/_context.json` supplies all context known about properties (predicates for Features) within this project.
+
+
+== UI Demo
+
+Feature label demo UI showing the application of the context JSON to the 3 GeoJSON dataset files.
+
+* https://kurrawong.github.io/ogc-fl-demo/web/
+
+
+
