@@ -1,0 +1,107 @@
+body {
+    font-family: sans-serif;
+}
+
+h1 {
+    text-align: center;
+    text-decoration: underline;
+    color:#666;
+    font-size:large;
+}
+h2 {
+    font-size:medium;
+    color:#666;
+}
+ul {
+    margin: 0;
+    padding:0;
+}
+ul li {
+    margin:0;
+    padding:0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    list-style-type: none;
+}
+
+.container {
+    display:flex;
+}
+
+label {
+    padding-right:10px;
+    padding-bottom:5px;
+}
+
+.container-cb {
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    flex: 1;
+    height: 400px; /* Adjust the height as needed */
+}
+
+table.popup-table {
+    border-collapse: collapse;
+    max-width: 100%;
+    width:100%;
+    table-layout: auto;
+}
+  
+table.popup-table td, table.popup-table th {
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+table.popup-table .tbl-label {
+    width:1px;
+    font-weight: bold;
+}
+
+table.popup-table .tbl-value {
+    word-wrap: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width:100%;
+}
+
+.info {
+    position:relative;
+    display:inline-block;
+    padding-right:20px;
+}
+
+.info-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background-color: lightskyblue;
+    border-radius: 50%;
+    cursor: pointer;
+}
+  
+.info-icon::before {
+    content: "i";
+    display: block;
+    color: blue;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 12px;
+    text-align: center;
+}
+  
+.info-text {
+    display: inline-block;
+    padding-right: 30px; /* Adjust the padding as needed */
+    cursor: pointer;
+}
+  
+/* Add hover effect */
+.info-icon:hover::before {
+    font-size: 12px;
+}
