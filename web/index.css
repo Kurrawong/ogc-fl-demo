@@ -24,8 +24,9 @@ ul li {
     list-style-type: none;
 }
 
-.container {
+.main-container {
     display:flex;
+    padding:20px;
 }
 
 label {
@@ -47,11 +48,16 @@ label {
     width: 500px !important;
 }
 
+.leaflet-popup-tip-container {
+    bottom:-19px;
+}
+
 table.popup-table {
     border-collapse: collapse;
     max-width: 100%;
     width:100%;
     table-layout: auto;
+    margin-bottom:30px;
 }
   
 table.popup-table td, table.popup-table th {
@@ -70,6 +76,14 @@ table.popup-table .tbl-value {
     overflow: hidden;
     text-overflow: ellipsis;
     width:100%;
+}
+
+.material-icons {
+    font-size:14px;
+    color:#0078A8;
+    position:absolute;
+    right:0;
+    top:0;
 }
 
 .info {

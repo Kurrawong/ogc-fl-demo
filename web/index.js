@@ -75,12 +75,14 @@ async function start() {
 
                 var geometryType = feature.geometry.type;
                 var coordinates = feature.geometry.coordinates;
+                var popupCoords = undefined
               
                 if(geometryType == 'Point') {
                     updateBoundingBox(coordinates[1], coordinates[0]);
+                    popupCoords = {lat: coordinates[1], lng: coordinates[0]}
                 } else {
                     const bounds = layer.getBounds();
-
+                    popupCoords = bounds.getCenter();
                     // Update the bounding box with the bounds of the layer
                     updateBoundingBox(bounds.getNorth(), bounds.getWest());
                     updateBoundingBox(bounds.getSouth(), bounds.getEast());
@@ -88,7 +90,7 @@ async function start() {
 
                 layer.on('click', function() {
                 // Function to handle click event
-                    showDetails(feature.properties);
+                    showDetails(popupCoords, feature.properties);
                     if(layer.setStyle) {
                         if(lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
@@ -141,13 +143,13 @@ async function start() {
 
             if(target) {
                 if(tooltip) {
-                    label = `<div class="info"><a title="${tooltip}" target="_blank" href="${target}">${label}<span class="info-icon"></span></a></div>`;
+                    label = `<div class="info"><a title="${tooltip}" target="_blank" href="${target}">${label}<i class="material-icons">help_outline</i></a></div>`;
                 } else {
                     label = `<a target="_blank" href="${target}">${label}</a>`;
                 }
             } else {
                 if(tooltip) {
-                    label = `<div class="info"><span class="info-text" title="${tooltip}">${label}<span class="info-icon"></span></span></div>`
+                    label = `<div class="info"><span class="info-text" title="${tooltip}">${label}<i class="material-icons">help_outline</i></span></div>`
                 }
             }
 //            r = `<tr><td colspan="2">${name}: ${JSON.stringify(props)}</td></tr>`
@@ -162,7 +164,7 @@ async function start() {
     }
 
     // Function to handle the click event and display details
-    function showDetails(properties) {
+    function showDetails(popupCoords, properties) {
 
         let info = 
             ('name' in properties ? `<h2>${properties.name}</h2>` : '') +
@@ -172,11 +174,10 @@ async function start() {
             info+= outputProperty(properties, prop)
         }
         info+= '</table>'
-
+        console.log(popupCoords);
         // Display the details in a popup or any other element on the page
-        // Example using Leaflet's popup:
         let popup = L.popup()
-            .setLatLng(map.getCenter())
+            .setLatLng(popupCoords)
             .setContent(info)
             .openOn(map);
 
