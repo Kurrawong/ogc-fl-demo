@@ -43,6 +43,10 @@ label {
     height: 400px; /* Adjust the height as needed */
 }
 
+.leaflet-popup-content {
+    width: 500px !important;
+}
+
 table.popup-table {
     border-collapse: collapse;
     max-width: 100%;

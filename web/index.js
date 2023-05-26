@@ -123,7 +123,7 @@ async function start() {
     });
 
     function outputProperty(properties, name) {
-        const value = properties[name]
+        let value = properties[name]
         let label = capitalizeFirstChar(name);
         let r = ''
         if(name in contextConfig) {
@@ -152,7 +152,13 @@ async function start() {
             }
 //            r = `<tr><td colspan="2">${name}: ${JSON.stringify(props)}</td></tr>`
         }
-        return r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${value}</td></tr>`;
+        let strValue = ''
+        if(typeof(value) == 'object' && 'length' in value) {
+            strValue = value.join('<br/>');
+        } else {
+            strValue = value;
+        }
+        return r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${strValue}</td></tr>`;
     }
 
     // Function to handle the click event and display details
