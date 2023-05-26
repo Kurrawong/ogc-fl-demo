@@ -1,5 +1,12 @@
 = OGC Feature Labels Demonstrator
 
+== Web Demo
+
+This repo's `gh-pages` branch, online at:
+
+https://kurrawong.github.io/ogc-fl-demo/web/
+
+
 == Property Behaviours
 
 |===
