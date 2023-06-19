@@ -3,6 +3,9 @@
 `annotations/`
 
 * contains labels, descriptions etc. for all predicates and some objects in the data
+    * _geojson.json - annotations for the GeoJSON model. Not really used now but here for future use
+    * ogc-rainbow.json - the OGC's stuff. Simulating us getting it from somewhere remotely
+    * semantic-background.json - all the stuff our client already knows, out-of-the box
 
 `contexts/`
 

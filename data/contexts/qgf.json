@@ -7,6 +7,12 @@
     "youngestTime": "unk:youngestTime",
     "oldestTime": "unk:oldestTime",
     "id": "@id",
-    "qgf": "https://gsq-prez.dev.kurrawong.ai/s/datasets/dtst:qldgeofeatures/collections/qldgftrs:features/items/qldgftrs:"
+    "qgf": "https://gsq-prez.dev.kurrawong.ai/s/datasets/dtst:qldgeofeatures/collections/qldgftrs:features/items/qldgftrs:",
+    "gft": "https://linked.data.gov.au/def/geofeatures/",
+    "Depression": "gft:Depression",
+    "Superbasin": "gft:Superbasin",
+    "Basin": "gft:Basin",
+    "Craton": "gft:Craton",
+    "Orogen": "gft:Orogen"
   }
 }

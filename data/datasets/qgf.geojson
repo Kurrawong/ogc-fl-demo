@@ -46,7 +46,7 @@
         "name": "Centralian Superbasin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
-        "featureType": "Superbasifn"
+        "featureType": "Superbasin"
       },
       "geometry": {
         "type": "Polygon",
