@@ -1,0 +1,12 @@
+{
+  "@context": {
+    "sdo": "https://schema.org/",
+    "name": "sdo:name",
+    "featureType": "sdo:additionalType",
+    "unk": "http://unknown.com/",
+    "youngestTime": "unk:youngestTime",
+    "oldestTime": "unk:oldestTime",
+    "id": "@id",
+    "qgf": "https://gsq-prez.dev.kurrawong.ai/s/datasets/dtst:qldgeofeatures/collections/qldgftrs:features/items/qldgftrs:"
+  }
+}

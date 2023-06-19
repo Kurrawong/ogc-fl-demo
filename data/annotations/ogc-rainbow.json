@@ -1,0 +1,19 @@
+{
+  "http://www.opengis.net/ont/geosparql#hasMetricArea": {
+    "name": "Has Metric Area",
+    "description": "The area of a Spatial Object in square meters",
+    "seeAlso": "https://opengeospatial.github.io/ogc-geosparql/geosparql11/spec.html#_property_geohasmetricarea",
+    "range": "http://www.w3.org/2001/XMLSchema#float"
+  },
+  "http://www.opengis.net/ont/geosparql#sfWithin": {
+    "name": "Within",
+    "description": "States that the subject SpatialObject is spatially within the object SpatialObject. DE-9IM: T*F**F***",
+    "seeAlso": "https://opengeospatial.github.io/ogc-geosparql/geosparql11/spec.html#Property:geo:sfWithin",
+    "range": "http://www.opengis.net/ont/geosparql#Feature"
+  },
+  "http://www.opengis.net/ont/geosparql#Feature": {
+    "name": "Feature",
+    "description": "A discrete spatial phenomenon in a universe of discourse",
+    "seeAlso": "https://opengeospatial.github.io/ogc-geosparql/geosparql11/spec.html#_class_geofeature"
+  }
+}

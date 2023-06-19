@@ -1,0 +1,33 @@
+{
+  "https://schema.org/area": {
+    "name": "Area",
+    "description": "The area within which users can expect to reach the broadcast service"
+  },
+  "https://schema.org/name": {
+    "name": "Name",
+    "description": "The name of the item",
+    "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+  },
+  "https://schema.org/additionalType": {
+    "name": "Additional Type",
+    "description": "An additional type for the item",
+    "range": "http://www.w3.org/2002/07/owl#Class"
+  },
+  "https://schema.org/elevation": {
+    "name": "Elevation",
+    "description": "The elevation of a location (WGS 84). Values may be of the form 'NUMBER UNIT_OF_MEASUREMENT' (e.g., '1,000 m', '3,200 ft') while numbers alone should be assumed to be a value in meters",
+    "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+  },
+  "http://www.w3.org/2000/01/rdf-schema#Literal": {
+    "name": "Literal",
+    "description": "The class of literal values, eg. textual strings and integers"
+  },
+  "http://www.w3.org/2002/07/owl#Class": {
+    "name": "Class",
+    "description": "The class of OWL classes"
+  },
+  "http://www.w3.org/2001/XMLSchema#float": {
+    "name": "Float",
+    "description": "Floating Point Number"
+  }
+}
