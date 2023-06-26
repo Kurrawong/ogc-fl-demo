@@ -9,7 +9,7 @@
         "name": "Barrolka Depression",
         "youngestTime": "Devonian",
         "oldestTime": "Devonian",
-        "type": "Depression"
+        "featureType": "Depression"
       },
       "geometry": {
         "type": "Polygon",
@@ -46,7 +46,7 @@
         "name": "Centralian Superbasin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
-        "type": "Superbasifn"
+        "featureType": "Superbasin"
       },
       "geometry": {
         "type": "Polygon",
@@ -83,7 +83,7 @@
         "name": "Cooper Basin",
         "youngestTime": "Triassic",
         "oldestTime": "Permian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -120,7 +120,7 @@
         "name": "Eromanga Basin",
         "youngestTime": "Cenomanian",
         "oldestTime": "Rhaetian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -157,7 +157,7 @@
         "name": "Eromanga Basin",
         "youngestTime": "Cenomanian",
         "oldestTime": "Rhaetian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -194,7 +194,7 @@
         "name": "Galilee Basin",
         "youngestTime": "MiddleTriassic",
         "oldestTime": "UpperMississippian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -231,7 +231,7 @@
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -268,7 +268,7 @@
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -305,7 +305,7 @@
         "name": "Georgina Basin",
         "youngestTime": "Devonian",
         "oldestTime": "Neoproterozoic",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -342,7 +342,7 @@
         "name": "North Australian Craton",
         "youngestTime": "Mesoproterozoic",
         "oldestTime": "Paleoproterozoic",
-        "type": "Craton"
+        "featureType": "Craton"
       },
       "geometry": {
         "type": "Polygon",
@@ -379,7 +379,7 @@
         "name": "Warburton Basin",
         "youngestTime": "MiddleOrdovician",
         "oldestTime": "Cambrian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -416,7 +416,7 @@
         "name": "Warburton Basin",
         "youngestTime": "MiddleOrdovician",
         "oldestTime": "Cambrian",
-        "type": "Basin"
+        "featureType": "Basin"
       },
       "geometry": {
         "type": "Polygon",
@@ -453,7 +453,7 @@
         "name": "Thomson Orogen",
         "youngestTime": "Silurian",
         "oldestTime": "Neoproterozoic",
-        "type": "Orogen"
+        "featureType": "Orogen"
       },
       "geometry": {
         "type": "Polygon",

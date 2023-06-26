@@ -1,0 +1,9 @@
+{
+  "@context": {
+    "iri": "@id",
+    "sdo": "https://schema.org/",
+    "name": "sdo:name",
+    "area": "geo:hasMetricArea",
+    "within": "geo:sfWithin"
+  }
+}

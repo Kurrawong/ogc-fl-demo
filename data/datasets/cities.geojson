@@ -6,7 +6,7 @@
       "properties": {
         "name": "Cape Town",
         "elevation": "0 m",
-        "country": "South Africa"
+        "country": "https://www.geonames.org/953987"
       },
       "geometry": {
         "coordinates": [
@@ -22,7 +22,7 @@
       "properties": {
         "name": "Maseru",
         "elevation": "1,600 m",
-        "country": "Lesotho"
+        "country": "https://www.geonames.org/932692"
       },
       "geometry": {
         "coordinates": [
@@ -38,7 +38,7 @@
       "properties": {
         "name": "Johannesburg",
         "elevation": "1,753 m",
-        "country": "South Africa"
+        "country": "https://www.geonames.org/953987"
       },
       "geometry": {
         "coordinates": [
@@ -54,7 +54,7 @@
       "properties": {
         "name": "Pretoria",
         "elevation": "1,339 m",
-        "country": "South Africa"
+        "country": "https://www.geonames.org/953987"
       },
       "geometry": {
         "coordinates": [
@@ -70,7 +70,7 @@
       "properties": {
         "name": "Mbabane",
         "elevation": "1,243 m",
-        "country": "Eswatini"
+        "country": "https://www.geonames.org/934841"
       },
       "geometry": {
         "coordinates": [
@@ -86,7 +86,7 @@
       "properties": {
         "name": "Upington",
         "elevation": "835 m",
-        "country": "South Africa"
+        "country": "https://www.geonames.org/953987"
       },
       "geometry": {
         "coordinates": [

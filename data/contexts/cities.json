@@ -1,0 +1,9 @@
+{
+  "@context": {
+    "sdo": "https://schema.org/",
+    "name": "sdo:name",
+    "elevation": "sdo:elevation",
+    "unk": "http://unknown.com/",
+    "country": "unk:country"
+  }
+}
