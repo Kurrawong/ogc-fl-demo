@@ -9,12 +9,12 @@
             "description": "About Queensland",
             "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/qgf.geojson",
             "contexts": {
-                "Semantic!": [
+                "On": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ],
-                "Bad": [
+                "Off": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ]
             }
@@ -24,12 +24,12 @@
             "description": "About ASA",
             "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/sa3s.geojson",
             "contexts": {
-                "Semantic!": [
+                "On": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ],
-                "Bad": [
+                "Off": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ]
             }
@@ -39,12 +39,12 @@
             "description": "About SA",
             "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/cities.geojson",
             "contexts": {
-                "Semantic!": [
+                "On": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ],
-                "Bad": [
+                "Off": [
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ]
             }
