@@ -1,51 +1,51 @@
 {
     "title": "OGC Feature Label Demo",
-    "about": "Version 2+ roadmap",
-    "annotations": ["../data/annotations/semantic-background.json", "../data/annotations/_geojson.json"],
-    "annotationsOGC": ["../data/annotations/ogc-rainbow.json"],
+    "about": "Version 2",
+    "annotations": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json", "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json"],
+    "annotationsOGC": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json"],
     "datasets": [
         {
             "name": "Queensland Geology",
             "description": "About Queensland",
-            "uri": "../data/datasets/qgf.geojson",
+            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/qgf.geojson",
             "contexts": {
                 "Semantic!": [
-                    "../data/contexts/_geojson.json",
-                    "../data/contexts/_geosparql-reduced.json",
-                    "../data/contexts/qgf.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ],
                 "Bad": [
-                    "../data/contexts/qgf.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ]
             }
         },
         {
             "name": "Australian Statistical Areas", 
             "description": "About ASA",
-            "uri": "../data/datasets/sa3s.geojson",
+            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/sa3s.geojson",
             "contexts": {
                 "Semantic!": [
-                    "../data/contexts/_geojson.json",
-                    "../data/contexts/_geosparql-reduced.json",
-                    "../data/contexts/sa3s.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ],
                 "Bad": [
-                    "../data/contexts/sa3s.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ]
             }
         },
         {
             "name": "South African Cities",
             "description": "About SA",
-            "uri": "../data/datasets/cities.geojson",
+            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/cities.geojson",
             "contexts": {
                 "Semantic!": [
-                    "../data/contexts/_geojson.json",
-                    "../data/contexts/_geosparql-reduced.json",
-                    "../data/contexts/cities.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ],
                 "Bad": [
-                    "../data/contexts/cities.json"
+                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ]
             }
         }
