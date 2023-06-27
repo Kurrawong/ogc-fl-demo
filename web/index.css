@@ -1,12 +1,15 @@
 body {
     font-family: sans-serif;
+    padding: 20px;
 }
 
 h1 {
-    text-align: center;
-    text-decoration: underline;
-    color:#666;
-    font-size:large;
+    font-size:x-large;
+    margin-bottom: 0;
+    margin-top:0;
+}
+#about {
+    margin-top:10px;
 }
 h2 {
     font-size:medium;
@@ -23,10 +26,22 @@ ul li {
     text-overflow: ellipsis;
     list-style-type: none;
 }
+a.ext {
+    position: relative;
+    padding-right: 20px;
+}
+a.ext2 {
+    position: relative;
+    padding-right: 30px;
+}
+a.ext2 .material-icons {
+    position: relative;
+    top:3px;
+    left:3px;
+}
 
 .main-container {
     display:flex;
-    padding:20px;
 }
 
 label {
@@ -34,9 +49,15 @@ label {
     padding-bottom:5px;
 }
 
-.container-cb {
+#datasets, #quality {
     display: flex;
     flex-direction: column;
+    margin-bottom:20px;
+}
+
+.sidebar {
+    width: 250px;
+    padding-right:20px;
 }
 
 #map {
@@ -122,4 +143,26 @@ table.popup-table .tbl-value {
 /* Add hover effect */
 .info-icon:hover::before {
     font-size: 12px;
+}
+
+.ogc-off .progress, .ogc-loaded .progress {
+    display:none;
+}
+
+.ogc-loaded .nonogc-props {
+    display:none;
+}
+
+.ogc-off .ogc-props, .ogc-loading .ogc-props {
+    display:none;
+}
+
+.ogc-loading .progress {
+    display:block;
+    margin:0;
+}
+
+.progress-wrapper {
+    margin: 0.5rem 0 1rem 0;
+    height: 10px;
 }

@@ -19,13 +19,94 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-const contextUrl = 'https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/_context.json';
+let contextSet = [];
+let annotationConfig = {};
+let annotationConfigFull = {};
 let sourceUrl = '';
+let iriRefs = {};
+let iriLayers = {};
+let configData = {};
 
 function capitalizeFirstChar(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function getAbsoluteURL(relativePath) {
+    const baseURL = new URL(window.location.href);
+    const absoluteURL = new URL(relativePath, baseURL).href;
+    return absoluteURL;
+}
+
+async function mergeContexts(contextUrls) {
+    try {
+      const contextResponses = await Promise.all(
+        contextUrls.map(url => fetch(url).then(response => response.json()))
+      );
+  
+      const mergedContext = {
+        "@context": {
+          ...contextResponses.reduce((acc, response) => {
+            return { ...acc, ...response["@context"] };
+          }, {})
+        }
+      };
+  
+      return mergedContext;
+    } catch (error) {
+      console.error(error);
+    }
+}
+
+function flattenExpandedJsonLd(expanded) {
+    const flattened = expanded.map(item => {
+      const properties = {};
+      for (const key in item) {
+        const value = item[key];
+        if (Array.isArray(value)) {
+          properties[key] = value.map(flattenValue);
+        } else {
+          properties[key] = flattenValue(value);
+        }
+      }
+      return properties;
+    });
+    return flattened.length === 1 ? flattened[0] : flattened;
+}
+
+function ogcShine(el) {
+    //console.log('Std annotations', annotationConfig);
+    //console.log('+OGC annotations', annotationConfigFull);
+
+    const isOGC = el.parentElement.getAttribute('class') != 'ogc-off'
+    el.parentElement.setAttribute('class', 'ogc-loading');
+
+    setTimeout(()=>{ 
+        el.parentElement.setAttribute('class', isOGC ? 'ogc-off' : 'ogc-loaded')
+        el.parentElement.getElementsByClassName('btn')[0].classList.add('disabled');
+        M.toast({html: (isOGC ? 'Rainbow shine removed' : 'Showing rainbow shine'), })
+    }, 2500);
+}
+  
+function flattenValue(value) {
+    if (typeof value === 'object' && value !== null && '@value' in value) {
+      return value['@value'];
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 1 && typeof value[0] === 'object' && '@value' in value[0]) {
+        return value[0]['@value'];
+      }
+      return value.map(flattenValue);
+    }
+    if (typeof value === 'object' && value !== null) {
+      const result = {};
+      for (const key in value) {
+        result[key] = flattenValue(value[key]);
+      }
+      return result;
+    }
+    return value;
+}
+        
 async function start() {
 
     // Initialize min/max values with initial coordinates
@@ -42,8 +123,6 @@ async function start() {
         maxLng = Math.max(maxLng, lng);
     }    
 
-    const contextConfig = await (await fetch(contextUrl)).json();
-
     // To clear the GeoJSON layer
     if (geojsonLayer) {
         geojsonLayer.clearLayers();
@@ -52,6 +131,19 @@ async function start() {
     let lastLayer = undefined;
     let lastLayerColor = undefined;
 
+
+//    alert(JSON.stringify(contextSet));
+
+    const contexts = contextSet.map((context) => getAbsoluteURL(context));
+
+    //console.log("Source", getAbsoluteURL(sourceUrl));
+
+    //console.log('Applying ', contexts)
+
+    const mergedContext = await mergeContexts(contexts);
+
+    //console.log('MERGED CONTEXTS', mergedContext);
+
     // Load the GeoJSON data
     fetch(sourceUrl)
     .then(function(response) {
@@ -59,6 +151,9 @@ async function start() {
     })
     .then(function(data) {
 
+        // clear all previous IRI references
+        iriRefs = {};
+        iriLayers = {};
         if(lastPopup) {
             const closeItems = document.getElementsByClassName('leaflet-popup-close-button');
             // work around, as close popup method doesn't appear to close the popup
@@ -71,7 +166,7 @@ async function start() {
         lastLayer = undefined;
         // Create a Leaflet GeoJSON layer and add it to the map
         geojsonLayer = L.geoJSON(data, {
-            onEachFeature: function(feature, layer) {
+            onEachFeature: async function(feature, layer) {
 
                 var geometryType = feature.geometry.type;
                 var coordinates = feature.geometry.coordinates;
@@ -88,9 +183,28 @@ async function start() {
                     updateBoundingBox(bounds.getSouth(), bounds.getEast());
                 }
 
+                let propertiesExpanded = feature.properties;
+                try {
+                    propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...mergedContext, ...feature.properties}));
+                    //console.log(propertiesExpanded);
+                } catch (ex) {
+                    console.log(ex, feature.properties)
+                }
+                // console.log("PROPS", feature.properties);
+                // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
+
+                if('name' in feature.properties && 'iri' in feature.properties) {
+                    iriRefs[feature.properties.iri] = feature.properties.name;
+                    iriLayers[feature.properties.iri] = layer;
+                }
+
                 layer.on('click', function() {
-                // Function to handle click event
-                    showDetails(popupCoords, feature.properties);
+                    // Function to handle click event
+
+                    console.log("1. SHOWING DETAILS FOR", feature.properties);
+                    console.log("2. EXPANDED DETAILS", propertiesExpanded);
+
+                    showDetails(popupCoords, propertiesExpanded);//feature.properties);
                     if(layer.setStyle) {
                         if(lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
@@ -100,6 +214,7 @@ async function start() {
                         lastLayer = layer;
                     }
                 });
+
             }
         }).addTo(map);
 
@@ -124,64 +239,108 @@ async function start() {
 
     });
 
-    function outputProperty(properties, name) {
-        let value = properties[name]
-        let label = capitalizeFirstChar(name);
-        let r = ''
-        if(name in contextConfig) {
-            const props = contextConfig[name];
-            if('label' in props) {
-                label = props.label
+    function outputPropertyValue(name, text, annotations) {
+        if(text.match(/^https?:\/\//)) {
+            if(text in annotations && 'name' in annotations[text]) {
+                text = annotations[text].name;
             }
-            const tooltip = 'description' in props ? (
+        }
+        var urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, function(url) {
+            if((name != 'iri' && name != '@id') && url in iriRefs) {
+                return `<a href="${url}" onClick="internalLink(event)">${iriRefs[url]}</a>`;
+            } else {
+                if(name =='@id') {
+                    return `<a data-tooltip=${url} class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
+                } else {
+                    return `<a class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
+                }
+            }
+        });
+    }
+
+    function outputProperty(properties, name, annotations) {
+        let value = properties[name]
+        const defLabel = name.indexOf('http') == 0 && name.indexOf('#') > 0 ? name.split('#')[1] : name;
+        let label = defLabel.indexOf('http') == 0 ? defLabel : capitalizeFirstChar(defLabel);
+
+        let r = '';
+
+        let strValue = '';
+        let helpValue = '';
+        if(typeof(value) == 'object' && 'length' in value) {
+            helpValue = value.join(', ');
+            strValue = value.map(val=>outputPropertyValue(name, val.toString(), annotations)).join('<br/>');
+        } else {
+            helpValue = value.toString();
+            strValue = outputPropertyValue(name, value.toString(), annotations);
+        }
+
+        if(name in annotations) {
+            const props = annotations[name];
+            if('name' in props) {
+                label = props.name
+            }
+            let tooltip = 'description' in props ? (
                 'chain' in props ? `${props.chain.join('/')}\n${props.description}` :
                 props.description
             ) : ('chain' in props ? props.chain.join('/') : undefined);
+
+            if(tooltip) {
+                tooltip = Mustache.render(tooltip, {...properties, value: helpValue});
+            }
 
             const target = ('seeAlso' in props ? props.seeAlso : 
                 ('iri' in props ? props.iri : undefined));
 
             if(target) {
                 if(tooltip) {
-                    label = `<div class="info"><a title="${tooltip}" target="_blank" href="${target}">${label}<i class="material-icons">help_outline</i></a></div>`;
+                    label = `<div class="info"><a class="ext2" data-position="bottom" data-tooltip="${tooltip}" target="_blank" href="${target}">${label}<i class="material-icons">open_in_new help_outline</i></a></div>`;
                 } else {
-                    label = `<a target="_blank" href="${target}">${label}</a>`;
+                    label = `<a class="ext2" target="_blank" href="${target}">${label}<i class="material-icons">open_in_new</i></a>`;
                 }
             } else {
                 if(tooltip) {
-                    label = `<div class="info"><span class="info-text" title="${tooltip}">${label}<i class="material-icons">help_outline</i></span></div>`
+                    label = `<div class="info"><span class="info-text" data-position="bottom" data-tooltip="${tooltip}">${label}<i class="material-icons">help_outline</i></span></div>`
                 }
             }
 //            r = `<tr><td colspan="2">${name}: ${JSON.stringify(props)}</td></tr>`
         }
-        let strValue = ''
-        if(typeof(value) == 'object' && 'length' in value) {
-            strValue = value.join('<br/>');
-        } else {
-            strValue = value;
-        }
+        
         return r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${strValue}</td></tr>`;
     }
 
     // Function to handle the click event and display details
     function showDetails(popupCoords, properties) {
 
-        let info = 
-            ('name' in properties ? `<h2>${properties.name}</h2>` : '') +
-            '<table class="popup-table">';
+        const displayName = 'https://schema.org/name' in properties ? properties['https://schema.org/name'] :
+            '@id' in properties ? properties['@id'] : 'Unknown name or ID'
+
+        let info = `<table class="popup-table nonogc-props">`;
+        let infoOGC = `<table class="popup-table ogc-props">`;
 
         for(prop in properties) {
-            info+= outputProperty(properties, prop)
+//            if(prop == '@id') continue;
+            info+= outputProperty(properties, prop, annotationConfig);
+            infoOGC+= outputProperty(properties, prop, annotationConfigFull);
         }
         info+= '</table>'
-        console.log(popupCoords);
+        infoOGC+= '</table>'
+        //console.log(popupCoords);
+
         // Display the details in a popup or any other element on the page
         let popup = L.popup()
             .setLatLng(popupCoords)
-            .setContent(info)
+            .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + info + infoOGC + 
+                `<button class="btn" onclick="ogcShine(this)">Add Rainbow Shine</button>` + 
+                `<div class="progress-wrapper"><div class="progress"><div class="indeterminate"></div></div></div>` +
+                `</div>`)
             .openOn(map);
 
         lastPopup = popup;
+
+        let elems = document.querySelectorAll('[data-tooltip]');
+        M.Tooltip.init(elems, {});
 
         var popupContent = popup.getElement()
         var popupWidth = popup.getElement().clientWidth
@@ -201,29 +360,46 @@ async function start() {
     }
 }
 
-var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+let checkboxes = [];
+let currentQuality = '';
+let currentSource;
+let nameEl = document.getElementById('ds-name');
+let descriptionEl = document.getElementById('ds-description');
 
-function handleCheckboxClick(event) {
-  // Get the clicked checkbox
-  var clickedCheckbox = event.target;
-  sourceUrl = clickedCheckbox.value;
-  start();
-
-  // Deselect all other checkboxes
-  checkboxes.forEach(function(checkbox) {
-    if (checkbox !== clickedCheckbox) {
-      checkbox.checked = false;
-    }
-  });
+function setActive(cb) {
+    currentSource = cb;
+    nameEl.innerText = cb.getAttribute('data-name');
+    descriptionEl.innerText = cb.getAttribute('data-description');
 }
 
-// Attach event listeners to checkboxes
-checkboxes.forEach(function(checkbox) {
-  if(sourceUrl == '') {
-    sourceUrl = checkbox.value;
-  }
-  checkbox.addEventListener('click', handleCheckboxClick);
-});
+function setContext() {
+    if(currentQuality) {
+        contextSet = JSON.parse(currentSource.getAttribute('data-contexts'))[currentQuality];
+    }
+}
+
+function handleCheckboxClick(event) {
+    // Get the clicked checkbox
+    var clickedCheckbox = event.target;
+    if(clickedCheckbox.getAttribute('data-group') == 'datasets') {
+        sourceUrl = clickedCheckbox.value;
+        setActive(clickedCheckbox);
+    } else {
+        currentQuality = clickedCheckbox.value;
+    }
+
+    // Deselect all other checkboxes
+    checkboxes.forEach(function(checkbox) {
+        if(checkbox.getAttribute('data-group') == clickedCheckbox.getAttribute('data-group')) {
+            if (checkbox !== clickedCheckbox) {
+                checkbox.checked = false;
+            }
+        }
+    });
+
+    setContext();
+    start();
+}
 
 // Function to calculate the area of a layer's bounds
 function calculateLayerArea(layer) {
@@ -233,6 +409,12 @@ function calculateLayerArea(layer) {
     var bounds = layer.getBounds();
     var area = (bounds.getNorth() - bounds.getSouth()) * (bounds.getEast() - bounds.getWest());
     return area;
+}
+
+function internalLink(event) {
+    event.preventDefault();
+    //console.log(iriLayers[event.target])
+    iriLayers[event.target].fireEvent('click');
 }
 
 // Function to bring layers within the bounding box to the front
@@ -256,4 +438,96 @@ function bringToFrontLayers() {
     });
 }
 
-start()
+async function mergeJsonLdData(jsonDataArray) {
+    let mergedData = {};
+  
+    for (const jsonData of jsonDataArray) {
+      mergedData = await jsonld.merge(mergedData, jsonData);
+    }
+  
+    // Convert mergedData back to JSON-LD format
+    const mergedJsonLd = JSON.stringify(mergedData, null, 2);
+  
+    return mergedJsonLd;
+}
+
+async function mergeJsonFromUrls(urls) {
+    const mergedData = await Promise.all(
+      urls.map(url => fetch(url).then(response => response.json()))
+    ).then(jsonDataArray =>
+      jsonDataArray.reduce((merged, json) => ({ ...merged, ...json }), {})
+    );
+  
+    return mergedData;
+}
+
+const init = async () => {
+    try {
+        const response = await fetch('./config.json'); 
+        configData = await response.json();
+
+        // get context quality labels
+        let qualities = [];
+        configData.datasets.forEach(dataset=>{
+            Object.keys(dataset.contexts).forEach(context=>{
+                if(qualities.indexOf(context) < 0) {
+                    qualities.push(context);
+                }
+            })
+        })
+
+        annotationConfig = await mergeJsonFromUrls(configData.annotations);
+        annotationConfigFull = await mergeJsonFromUrls([...configData.annotations, ...configData.annotationsOGC]);
+
+        //console.log("CONFIG", annotationConfig);
+
+        const datasetsContainer = document.getElementById('datasets');
+        const qualityContainer = document.getElementById('quality');
+        datasetsContainer.innerHTML = configData.datasets.map((dataset, index) => `
+            <label>
+            <input
+                data-group="datasets"
+                data-name="${dataset.name}" 
+                data-description="${dataset.description}"
+                class="filled-in" ${!index && 'checked'} 
+                data-contexts=${JSON.stringify(dataset.contexts)}
+                value="${dataset.uri}" type="checkbox" />
+            <span>${dataset.name}</span>
+            </label>
+        `).join('');
+        qualityContainer.innerHTML = qualities.map((quality, index)=>`
+            <label>
+            <input
+                data-group="quality"
+                data-name="${quality}" 
+                data-description="${quality}"
+                class="filled-in" ${!index && 'checked'} 
+                value="${quality}" type="checkbox" />
+            <span>${quality}</span>
+            </label>
+        `).join('');
+        document.getElementById('title').innerText = configData.title;
+        document.getElementById('about').innerText = configData.about;
+        checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        
+        // Attach event listeners to checkboxes
+        checkboxes.forEach(function(checkbox) {
+            if(sourceUrl == '' && checkbox.checked) {
+                sourceUrl = checkbox.value;
+                setActive(checkbox);
+            }
+            if(currentQuality == '' && checkbox.getAttribute('data-group') == 'quality') {
+                currentQuality = checkbox.value;
+            }
+            checkbox.addEventListener('click', handleCheckboxClick);
+        });
+        setContext();
+  
+        start()
+
+    } catch (error) {
+        console.error('Error fetching or parsing JSON:', error);
+    }
+};
+
+init()

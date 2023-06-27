@@ -13,18 +13,28 @@
     <link rel="stylesheet" href="index.css" />
 </head>
 <body>
-    <h1>OGC Feature Label Demo</h1>
     <div class="main-container">
-        <div class="container-cb">
+        <div class="sidebar">
+            <h1 id="title">OGC Feature Label Demo</h1>
+            <blockquote id="about"></blockquote>
             <h2>Example datasets</h2>
-            <label><input class="filled-in" checked value="https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/qgf.geojson" type="checkbox" /><span>Queensland Geology</span></label>
-            <label><input class="filled-in" value="https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/sa3s.geojson" type="checkbox" /> <span>Australian Statistical Areas</span></label>
-            <label><input class="filled-in" value="https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/cities.geojson" type="checkbox" /> <span>South African Cities</span></label>
+            <div id="datasets"></div>
+            <h2>Quality</h2>
+            <div id="quality"></div>
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title" id="ds-name"></span>
+                    <p id="ds-description"></p>
+                </div>
+            </div>
         </div>
         <div id="map" style="height: 400px;"></div>
     </div>
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
+    <!-- Main application JS -->
     <script src="index.js"></script>
 </body>
 </html>
