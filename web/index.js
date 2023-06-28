@@ -270,6 +270,8 @@ async function start() {
 
     function outputProperty(properties, name, annotations) {
         let value = properties[name]
+        const nameLink = name.match(/^https?:\/\//) ? name : undefined
+        //alert(name)
         const defLabel = name.indexOf('http') == 0 && name.indexOf('#') > 0 ? name.split('#')[1] : name;
         let label = defLabel.indexOf('http') == 0 ? defLabel : capitalizeFirstChar(defLabel);
 
@@ -287,6 +289,7 @@ async function start() {
 
         if(name in annotations) {
             const props = annotations[name];
+            //console.log(props, properties);
             if('name' in props) {
                 label = props.name
             }
@@ -300,7 +303,7 @@ async function start() {
             }
 
             const target = ('seeAlso' in props ? props.seeAlso : 
-                ('iri' in props ? props.iri : undefined));
+                ('iri' in props ? props.iri : (nameLink ? nameLink : undefined)));
 
             if(target) {
                 if(tooltip) {
