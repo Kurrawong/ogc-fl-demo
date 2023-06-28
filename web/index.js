@@ -38,6 +38,9 @@ function getAbsoluteURL(relativePath) {
 }
 
 async function mergeContexts(contextUrls) {
+    if(contextUrls.length == 0) {
+        return {}
+    }
     try {
       const contextResponses = await Promise.all(
         contextUrls.map(url => fetch(url).then(response => response.json()))
@@ -131,7 +134,6 @@ async function start() {
     let lastLayer = undefined;
     let lastLayerColor = undefined;
 
-
 //    alert(JSON.stringify(contextSet));
 
     const contexts = contextSet.map((context) => getAbsoluteURL(context));
@@ -142,7 +144,8 @@ async function start() {
 
     const mergedContext = await mergeContexts(contexts);
 
-    //console.log('MERGED CONTEXTS', mergedContext);
+    //console.log('MERGED CONTEXTS', contexts)
+    //console.log("XCONTENT", mergedContext);
 
     // Load the GeoJSON data
     fetch(sourceUrl)
@@ -185,7 +188,12 @@ async function start() {
 
                 let propertiesExpanded = feature.properties;
                 try {
+
                     propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...mergedContext, ...feature.properties}));
+                    // console.log("XX", feature.properties, propertiesExpanded)
+                    if(propertiesExpanded.length == 0) {
+                        propertiesExpanded = feature.properties;
+                    }
                     //console.log(propertiesExpanded);
                 } catch (ex) {
                     console.log(ex, feature.properties)
@@ -240,9 +248,10 @@ async function start() {
     });
 
     function outputPropertyValue(name, text, annotations) {
+        let displayText = ''; 
         if(text.match(/^https?:\/\//)) {
             if(text in annotations && 'name' in annotations[text]) {
-                text = annotations[text].name;
+                displayText = annotations[text].name;
             }
         }
         var urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -253,7 +262,7 @@ async function start() {
                 if(name =='@id') {
                     return `<a data-tooltip=${url} class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
                 } else {
-                    return `<a class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
+                    return `<a class="ext" href="${url}">${displayText != '' ? displayText : url}<i class="material-icons">open_in_new</i></a>`;
                 }
             }
         });

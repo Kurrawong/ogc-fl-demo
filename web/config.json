@@ -15,7 +15,6 @@
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ],
                 "Off": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
                 ]
             }
         },
@@ -30,7 +29,6 @@
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ],
                 "Off": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
                 ]
             }
         },
@@ -45,7 +43,6 @@
                     "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ],
                 "Off": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
                 ]
             }
         }
