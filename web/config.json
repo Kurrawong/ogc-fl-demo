@@ -1,6 +1,6 @@
 {
     "title": "OGC Feature Label Demo",
-    "about": "Version 2",
+    "about": "Version 2.1",
     "annotations": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json", "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json"],
     "annotationsOGC": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json"],
     "datasets": [

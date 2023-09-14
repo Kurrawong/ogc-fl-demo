@@ -166,3 +166,44 @@ table.popup-table .tbl-value {
     margin: 0.5rem 0 1rem 0;
     height: 10px;
 }
+
+#body.map-mode #map {
+    display:block;
+}
+
+#body.map-mode #info {
+    display:none;
+}
+
+#body.info-mode #map {
+    display:none;
+}
+
+#body.info-mode #info {
+    display:block;
+}
+
+.container .row pre {
+    margin:0;
+    padding:0;
+}
+
+.container .row ul {
+    overflow-x:auto;
+}
+
+.container.full {
+    width:100% !important;
+    max-width: 100% !important;
+}
+
+#info h2 {
+    background-color: #eee;
+    text-align:center;
+    color:black;
+    border-bottom:1px solid #ccc;
+}
+
+#info h3 {
+    font-size:20px;
+}

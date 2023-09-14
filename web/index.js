@@ -76,6 +76,106 @@ function flattenExpandedJsonLd(expanded) {
     return flattened.length === 1 ? flattened[0] : flattened;
 }
 
+// Function to create a formatted HTML table from nested JSON data
+function createTablesFromNestedJson(data) {
+    const tables = [];
+  
+    // Iterate through the JSON data
+    data.forEach((item, index) => {
+      // Create a header for the parent key
+      for (const parentKey in item) {
+        if (item.hasOwnProperty(parentKey)) {
+          const h3 = document.createElement('h3');
+          h3.textContent = `#${index} - ${parentKey}`;
+          tables.push(h3);
+  
+          // Create a table for the current JSON object
+          const table = document.createElement('table');
+          table.classList.add('styled-table'); // Add a class for styling (optional)
+  
+          // Create the table header row
+          const headerRow = table.insertRow();
+          const properties = item[parentKey];
+          for (const key in properties) {
+            if (properties.hasOwnProperty(key)) {
+              const th = document.createElement('th');
+              th.textContent = key;
+              headerRow.appendChild(th);
+            }
+          }
+  
+          // Create a row for each property in the object
+          for (const key in properties) {
+            if (properties.hasOwnProperty(key)) {
+              const row = table.insertRow();
+              const cell1 = row.insertCell();
+              cell1.textContent = key;
+              const cell2 = row.insertCell();
+              cell2.textContent = JSON.stringify(properties[key]);
+            }
+          }
+  
+          tables.push(table);
+        }
+      }
+    });
+  
+    return tables;
+  }
+  
+function createTableFromJson(container, jsonData) {
+    // Create the tables and append them to the container
+    const tables = createTablesFromNestedJson(jsonData);
+    tables.forEach((table, index) => {
+        // Create a header for the current row number
+        const h2 = document.createElement('h2');
+        h2.textContent = `#${index}`;
+        container.appendChild(h2);
+
+        // Append the table to the container
+        container.appendChild(table);
+    });
+
+    let str = '';
+    jsonData.forEach((row, index)=>{
+        let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
+        name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
+        name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
+        
+        str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
+        str+= `<div class="col s3"><h3>Raw</h3><ul class="collapsible">`;
+        Object.keys(row['Properties']).map(key=>{
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Properties'][key]}</div></li>`;
+        })
+        str+= '</ul></div>';
+        str+= `<div class="col s3"><h3>Semantic+</h3><ul class="collapsible">`;
+        Object.keys(row['Expanded Properties']).map(key=>{
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Expanded Properties'][key]}</div></li>`;
+        })
+        str+= '</ul></div>';
+        str+= `<div class="col s3"><h3>Output <small>click item to explain</small></h3><ul class="activate collapsible">`;
+        Object.keys(row['Resolved']).map(key=>{
+            const val = row['Resolved'][key];
+            const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
+            str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
+                <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
+        })
+        str+= '</ul></div>';
+        str+= `<div class="col s3"><h3>Output +OGC <small>click item to explain</small></h3><ul class="activate collapsible">`;
+        Object.keys(row['Resolved +OGC']).map(key=>{
+            const val = row['Resolved +OGC'][key];
+            const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
+            str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
+                <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
+        })
+        str+= '</ul></div>';
+        str+= '</div></div>'
+    })
+    container.innerHTML = str;
+    const els = document.querySelectorAll('ul.collapsible.activate')
+    M.Collapsible.init(els);
+}
+
 function ogcShine(el) {
     //console.log('Std annotations', annotationConfig);
     //console.log('+OGC annotations', annotationConfigFull);
@@ -109,6 +209,8 @@ function flattenValue(value) {
     }
     return value;
 }
+
+let propTable = [];
         
 async function start() {
 
@@ -166,6 +268,7 @@ async function start() {
             lastPopup = undefined;
         }
 
+        propTable = [];
         lastLayer = undefined;
         // Create a Leaflet GeoJSON layer and add it to the map
         geojsonLayer = L.geoJSON(data, {
@@ -206,6 +309,18 @@ async function start() {
                     iriLayers[feature.properties.iri] = layer;
                 }
 
+                const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
+                for(prop in propertiesExpanded) {
+                    propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig).data;
+                    propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull).data;
+                }
+
+                propTable.push({
+                    "Properties": feature.properties,
+                    "Expanded Properties": propertiesExpanded,
+                    ...propInfo
+                });
+
                 layer.on('click', function() {
                     // Function to handle click event
 
@@ -225,6 +340,12 @@ async function start() {
 
             }
         }).addTo(map);
+        console.log("PROPERTIES", propTable);
+        setTimeout(()=>{
+            document.getElementById('info').innerHTML = '';
+            createTableFromJson(document.getElementById('info'), propTable);
+//            document.getElementById('info').innerHTML = JSON.stringify(propTable);
+        }, 100);
 
         map.on("click", function(event) {
             var id = event.originalEvent.target.id;
@@ -248,31 +369,52 @@ async function start() {
     });
 
     function outputPropertyValue(name, text, annotations) {
-        let displayText = ''; 
+        let displayText = '';
+        let log = [];
+        let val = text;
         if(text.match(/^https?:\/\//)) {
             if(text in annotations && 'name' in annotations[text]) {
                 displayText = annotations[text].name;
+                val = displayText;
+                log.push(text + ' and name found in annotations, get display text from annotation name')
             }
         }
         var urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, function(url) {
+        const outputStr = text.replace(urlRegex, function(url) {
             if((name != 'iri' && name != '@id') && url in iriRefs) {
+                log.push('iri found in internal list, create internal link');
+                val = iriRefs[url];
                 return `<a href="${url}" onClick="internalLink(event)">${iriRefs[url]}</a>`;
             } else {
                 if(name =='@id') {
+                    log.push('@id name, create link');
+                    val = url;
                     return `<a data-tooltip=${url} class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
                 } else {
-                    return `<a class="ext" href="${url}">${displayText != '' ? displayText : url}<i class="material-icons">open_in_new</i></a>`;
+                    val = (displayText != '' ? displayText : url)
+                    return `<a class="ext" href="${url}">${val}<i class="material-icons">open_in_new</i></a>`;
                 }
             }
         });
+        return {
+            log,
+            val,
+            str: outputStr
+        }
     }
 
-    function outputProperty(properties, name, annotations) {
+    function analyseProperty(properties, name, annotations, outputType) {
+        let log = []
         let value = properties[name]
+        let data = {};
         const nameLink = name.match(/^https?:\/\//) ? name : undefined
         //alert(name)
         const defLabel = name.indexOf('http') == 0 && name.indexOf('#') > 0 ? name.split('#')[1] : name;
+
+        if(name.indexOf('http') == 0 && name.indexOf('#') > 0) {
+            log.push('Default label set to #part');
+        }
+
         let label = defLabel.indexOf('http') == 0 ? defLabel : capitalizeFirstChar(defLabel);
 
         let r = '';
@@ -280,32 +422,63 @@ async function start() {
         let strValue = '';
         let helpValue = '';
         if(typeof(value) == 'object' && 'length' in value) {
+            //log.push('Property is an array');
             helpValue = value.join(', ');
-            strValue = value.map(val=>outputPropertyValue(name, val.toString(), annotations)).join('<br/>');
+            let vals = [];
+            strValue = value.map(val=>{ 
+                const outval = outputPropertyValue(name, val.toString(), annotations);
+                log = [...log, ...outval.log];
+                vals.push(outval.val); 
+                return outval.str;
+            }).join('<br/>');
+            data.value = vals.join(', ');
         } else {
             helpValue = value.toString();
-            strValue = outputPropertyValue(name, value.toString(), annotations);
+            const outval = outputPropertyValue(name, value.toString(), annotations);
+            log = [...log, ...outval.log];
+            strVal = outval.str;
+            data.value = outval.val;
         }
 
+        data.label = label;
         if(name in annotations) {
+            log.push('Property found in annotations');
             const props = annotations[name];
+            data.annotations = props;
             //console.log(props, properties);
             if('name' in props) {
                 label = props.name
+                log.push('Set label to annotation name "' + label + '"')
             }
             let tooltip = 'description' in props ? (
                 'chain' in props ? `${props.chain.join('/')}\n${props.description}` :
                 props.description
             ) : ('chain' in props ? props.chain.join('/') : undefined);
+            if(tooltip !== undefined) {
+                log.push('Tooltip set from annotation ' + ('description' in props ? 'description' : 'chain'));
+            }
 
             if(tooltip) {
                 tooltip = Mustache.render(tooltip, {...properties, value: helpValue});
+                data.tooltip = tooltip;
             }
 
             const target = ('seeAlso' in props ? props.seeAlso : 
                 ('iri' in props ? props.iri : (nameLink ? nameLink : undefined)));
 
+            if(target !== undefined) {
+                if('seeAlso' in props) {
+                    log.push('Set target link from seeAlso in annotations');
+                } else if ('iri' in props) {
+                    log.push('Set target link from iri in annotations');
+                } else {
+                    log.push('Set target from name link');
+                }
+            }
+
+            data.label = label;
             if(target) {
+                data.target = target;
                 if(tooltip) {
                     label = `<div class="info"><a class="ext2" data-position="bottom" data-tooltip="${tooltip}" target="_blank" href="${target}">${label}<i class="material-icons">open_in_new help_outline</i></a></div>`;
                 } else {
@@ -317,10 +490,19 @@ async function start() {
                 }
             }
 //            r = `<tr><td colspan="2">${name}: ${JSON.stringify(props)}</td></tr>`
+            data.value = strValue;
+        } else {
+            log.push('Property not found in annotations');
+        }
+        data.log = log;
+
+        return {
+            data,
+            tableRow: r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${strValue}</td></tr>`
         }
         
-        return r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${strValue}</td></tr>`;
     }
+
 
     // Function to handle the click event and display details
     function showDetails(popupCoords, properties) {
@@ -333,8 +515,8 @@ async function start() {
 
         for(prop in properties) {
 //            if(prop == '@id') continue;
-            info+= outputProperty(properties, prop, annotationConfig);
-            infoOGC+= outputProperty(properties, prop, annotationConfigFull);
+            info+= analyseProperty(properties, prop, annotationConfig).tableRow;
+            infoOGC+= analyseProperty(properties, prop, annotationConfigFull).tableRow;
         }
         info+= '</table>'
         infoOGC+= '</table>'
@@ -386,13 +568,16 @@ function setActive(cb) {
 
 function setContext() {
     if(currentQuality) {
-        contextSet = JSON.parse(currentSource.getAttribute('data-contexts'))[currentQuality];
+        contextSet = JSON.parse(decodeURIComponent(currentSource.getAttribute('data-contexts')))[currentQuality];
     }
 }
 
 function handleCheckboxClick(event) {
     // Get the clicked checkbox
     var clickedCheckbox = event.target;
+
+    if(clickedCheckbox.getAttribute('id') == 'cbswitcher') return;
+
     if(clickedCheckbox.getAttribute('data-group') == 'datasets') {
         sourceUrl = clickedCheckbox.value;
         setActive(clickedCheckbox);
@@ -411,6 +596,11 @@ function handleCheckboxClick(event) {
 
     setContext();
     start();
+}
+
+function switcher() {
+    const mapOn = !document.getElementById('cbswitcher').checked;
+    document.getElementById('body').className = (mapOn ? 'map-mode' : "info-mode");
 }
 
 // Function to calculate the area of a layer's bounds
@@ -475,7 +665,10 @@ async function mergeJsonFromUrls(urls) {
 
 const init = async () => {
     try {
-        const response = await fetch('./config.json'); 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const configParam = urlParams.get('config');
+        const response = await fetch(configParam ? configParam : './config.json'); 
         configData = await response.json();
 
         // get context quality labels
@@ -502,7 +695,7 @@ const init = async () => {
                 data-name="${dataset.name}" 
                 data-description="${dataset.description}"
                 class="filled-in" ${!index && 'checked'} 
-                data-contexts=${JSON.stringify(dataset.contexts)}
+                data-contexts=${encodeURIComponent(JSON.stringify(dataset.contexts))}
                 value="${dataset.uri}" type="checkbox" />
             <span>${dataset.name}</span>
             </label>
