@@ -76,66 +76,8 @@ function flattenExpandedJsonLd(expanded) {
     return flattened.length === 1 ? flattened[0] : flattened;
 }
 
-// Function to create a formatted HTML table from nested JSON data
-function createTablesFromNestedJson(data) {
-    const tables = [];
-  
-    // Iterate through the JSON data
-    data.forEach((item, index) => {
-      // Create a header for the parent key
-      for (const parentKey in item) {
-        if (item.hasOwnProperty(parentKey)) {
-          const h3 = document.createElement('h3');
-          h3.textContent = `#${index} - ${parentKey}`;
-          tables.push(h3);
-  
-          // Create a table for the current JSON object
-          const table = document.createElement('table');
-          table.classList.add('styled-table'); // Add a class for styling (optional)
-  
-          // Create the table header row
-          const headerRow = table.insertRow();
-          const properties = item[parentKey];
-          for (const key in properties) {
-            if (properties.hasOwnProperty(key)) {
-              const th = document.createElement('th');
-              th.textContent = key;
-              headerRow.appendChild(th);
-            }
-          }
-  
-          // Create a row for each property in the object
-          for (const key in properties) {
-            if (properties.hasOwnProperty(key)) {
-              const row = table.insertRow();
-              const cell1 = row.insertCell();
-              cell1.textContent = key;
-              const cell2 = row.insertCell();
-              cell2.textContent = JSON.stringify(properties[key]);
-            }
-          }
-  
-          tables.push(table);
-        }
-      }
-    });
-  
-    return tables;
-  }
   
 function createTableFromJson(container, jsonData) {
-    // Create the tables and append them to the container
-    const tables = createTablesFromNestedJson(jsonData);
-    tables.forEach((table, index) => {
-        // Create a header for the current row number
-        const h2 = document.createElement('h2');
-        h2.textContent = `#${index}`;
-        container.appendChild(h2);
-
-        // Append the table to the container
-        container.appendChild(table);
-    });
-
     let str = '';
     jsonData.forEach((row, index)=>{
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
@@ -238,13 +180,13 @@ async function start() {
 
 //    alert(JSON.stringify(contextSet));
 
-    const contexts = contextSet.map((context) => getAbsoluteURL(context));
+    const contexts = contextSet ? contextSet.map((context) => getAbsoluteURL(context)) : [];
 
     //console.log("Source", getAbsoluteURL(sourceUrl));
 
     //console.log('Applying ', contexts)
 
-    const mergedContext = await mergeContexts(contexts);
+    const mergedContextBase = await mergeContexts(contexts);
 
     //console.log('MERGED CONTEXTS', contexts)
     //console.log("XCONTENT", mergedContext);
@@ -254,7 +196,12 @@ async function start() {
     .then(function(response) {
         return response.json();
     })
-    .then(function(data) {
+    .then(async function(data) {
+
+        let mergedContext = mergedContextBase;
+        if(data['@context']) {
+            mergedContext = await mergeContexts([...contexts, getAbsoluteURL(data['@context'])])
+        }
 
         // clear all previous IRI references
         iriRefs = {};
@@ -270,56 +217,69 @@ async function start() {
 
         propTable = [];
         lastLayer = undefined;
+
+        async function processFeatureProperties(feature) {
+            let propertiesExpanded = feature.properties;
+            try {
+
+                propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...mergedContext, ...feature.properties}));
+                console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
+                if(propertiesExpanded.length == 0) {
+                    propertiesExpanded = feature.properties;
+                }
+                //console.log(propertiesExpanded);
+            } catch (ex) {
+                console.log(ex, feature.properties)
+            }
+            // console.log("PROPS", feature.properties);
+            // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
+
+            const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
+            for(prop in propertiesExpanded) {
+                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig).data;
+                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull).data;
+            }
+
+            propTable.push({
+                "Properties": feature.properties,
+                "Expanded Properties": propertiesExpanded,
+                ...propInfo
+            });
+            return propertiesExpanded
+        }
+
+        console.log('FEATURE DATA', data);
+
         // Create a Leaflet GeoJSON layer and add it to the map
         geojsonLayer = L.geoJSON(data, {
             onEachFeature: async function(feature, layer) {
 
+                console.log("FEATURE FOUND", feature);
                 var geometryType = feature.geometry.type;
                 var coordinates = feature.geometry.coordinates;
                 var popupCoords = undefined
               
                 if(geometryType == 'Point') {
                     updateBoundingBox(coordinates[1], coordinates[0]);
-                    popupCoords = {lat: coordinates[1], lng: coordinates[0]}
+                    popupCoords = {lat: coordinates[1], lng: coordinates[0]};
                 } else {
                     const bounds = layer.getBounds();
                     popupCoords = bounds.getCenter();
-                    // Update the bounding box with the bounds of the layer
-                    updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                    updateBoundingBox(bounds.getSouth(), bounds.getEast());
-                }
 
-                let propertiesExpanded = feature.properties;
-                try {
-
-                    propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...mergedContext, ...feature.properties}));
-                    // console.log("XX", feature.properties, propertiesExpanded)
-                    if(propertiesExpanded.length == 0) {
-                        propertiesExpanded = feature.properties;
+                    if(geometryType == 'LineString' && bounds.getNorth() == bounds.getSouth() && bounds.getWest() == bounds.getEast()) {
+                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
+                    } else {
+                        // Update the bounding box with the bounds of the layer
+                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
+                        updateBoundingBox(bounds.getSouth(), bounds.getEast());
                     }
-                    //console.log(propertiesExpanded);
-                } catch (ex) {
-                    console.log(ex, feature.properties)
                 }
-                // console.log("PROPS", feature.properties);
-                // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
-
                 if('name' in feature.properties && 'iri' in feature.properties) {
                     iriRefs[feature.properties.iri] = feature.properties.name;
                     iriLayers[feature.properties.iri] = layer;
                 }
 
-                const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
-                for(prop in propertiesExpanded) {
-                    propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig).data;
-                    propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull).data;
-                }
-
-                propTable.push({
-                    "Properties": feature.properties,
-                    "Expanded Properties": propertiesExpanded,
-                    ...propInfo
-                });
+                const propertiesExpanded = await processFeatureProperties(feature)
 
                 layer.on('click', function() {
                     // Function to handle click event
@@ -340,7 +300,22 @@ async function start() {
 
             }
         }).addTo(map);
+
         console.log("PROPERTIES", propTable);
+        // no properties found
+        if(propTable.length == 0) {
+            // manual process of features...
+            if(data.type == 'Feature') {
+                data = {type: 'FeatureCollection', features: [data]};
+            }
+            if(data.type == 'FeatureCollection' && data.features) {
+                data.features.forEach(async feature=>{
+                    const propertiesExpanded = await processFeatureProperties(feature)
+                })
+            }
+        }
+
+
         setTimeout(()=>{
             document.getElementById('info').innerHTML = '';
             createTableFromJson(document.getElementById('info'), propTable);
@@ -361,10 +336,14 @@ async function start() {
         // Create a Leaflet LatLngBounds object using the bounding box coordinates
         var bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
 
-        // Set the Leaflet map view to fit the bounding box
-        map.fitBounds(bounds);
+        if(minLat !== Infinity) {
+            // Set the Leaflet map view to fit the bounding box
+            map.fitBounds(bounds);
+            bringToFrontLayers();
+        } else {
+            switcher(true);
+        }
 
-        bringToFrontLayers();
 
     });
 
@@ -403,7 +382,7 @@ async function start() {
         }
     }
 
-    function analyseProperty(properties, name, annotations, outputType) {
+    function analyseProperty(properties, name, annotations) {
         let log = []
         let value = properties[name]
         let data = {};
@@ -426,6 +405,9 @@ async function start() {
             helpValue = value.join(', ');
             let vals = [];
             strValue = value.map(val=>{ 
+                if(typeof val === 'object' && val !== null ) {
+                    val = JSON.stringify(val);
+                }    
                 const outval = outputPropertyValue(name, val.toString(), annotations);
                 log = [...log, ...outval.log];
                 vals.push(outval.val); 
@@ -433,10 +415,13 @@ async function start() {
             }).join('<br/>');
             data.value = vals.join(', ');
         } else {
+            if(typeof value === 'object' && value !== null ) {
+                value = JSON.stringify(value);
+            }    
             helpValue = value.toString();
             const outval = outputPropertyValue(name, value.toString(), annotations);
             log = [...log, ...outval.log];
-            strVal = outval.str;
+            strValue = outval.str;
             data.value = outval.val;
         }
 
@@ -598,8 +583,12 @@ function handleCheckboxClick(event) {
     start();
 }
 
-function switcher() {
-    const mapOn = !document.getElementById('cbswitcher').checked;
+function switcher(showTable=false) {
+    let mapOn = !document.getElementById('cbswitcher').checked;
+    if(showTable && mapOn) {
+        !document.getElementById('cbswitcher').click();
+        mapOn = !mapOn;
+    }
     document.getElementById('body').className = (mapOn ? 'map-mode' : "info-mode");
 }
 
@@ -674,11 +663,13 @@ const init = async () => {
         // get context quality labels
         let qualities = [];
         configData.datasets.forEach(dataset=>{
-            Object.keys(dataset.contexts).forEach(context=>{
-                if(qualities.indexOf(context) < 0) {
-                    qualities.push(context);
-                }
-            })
+            if('contexts' in dataset) {
+                Object.keys(dataset.contexts).forEach(context=>{
+                    if(qualities.indexOf(context) < 0) {
+                        qualities.push(context);
+                    }
+                })
+            }
         })
 
         annotationConfig = await mergeJsonFromUrls(configData.annotations);

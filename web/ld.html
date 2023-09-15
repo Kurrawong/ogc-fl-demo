@@ -12,41 +12,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="index.css" />
 </head>
-<body id="body" class="map-mode">
-    <div class="main-container">
-        <div class="sidebar">
-            <h1 id="title">OGC Feature Label Demo</h1>
-            <blockquote id="about"></blockquote>
-            <h2>Datasets</h2>
-            <div id="datasets"></div>
-            <!--h2>Semantic options</h2-->
-            <div id="quality"></div>
-            <div class="card">
-                <div class="card-content">
-                    <span class="card-title" id="ds-name"></span>
-                    <p id="ds-description"></p>
-                </div>
-            </div>
+<body id="body">
+    <div class="container">
+        <div class="row">
+            <label for="file">File: </label><input id="file" type="text" value="https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/features/observation/example_1_1.jsonld" />
+            <button class="btn" type="button" onclick="init(document.getElementById('file').value)">Load</button>
         </div>
-        <div id="switch" style="width:100%;">
-            <div class="switch">
-                <label>
-                Map
-                <input id="cbswitcher" type="checkbox" value="1" onclick="switcher()">
-                <span class="lever"></span>
-                Table
-                </label>
-            </div>
-            <br />
-            <div id="map" style="height: 400px;"></div>
-            <div id="info"></div>
-        </div>
+        <hr />
+        <div id="results"></div>
     </div>
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mustache@4.2.0/mustache.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
     <!-- Main application JS -->
-    <script src="index.js"></script>
+    <script src="ld.js"></script>
 </body>
 </html>

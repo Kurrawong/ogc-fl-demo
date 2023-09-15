@@ -5,46 +5,24 @@
     "annotationsOGC": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json"],
     "datasets": [
         {
-            "name": "Queensland Geology",
-            "description": "About Queensland",
-            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/qgf.geojson",
-            "contexts": {
-                "On": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/qgf.json"
-                ],
-                "Off": [
-                ]
-            }
+            "name": "VObserv Feature Ex 1.1",
+            "description": "OGC Vector Observation Feature",
+            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/examples/vectorObservationFeature/example_1_1.json"
         },
         {
-            "name": "Australian Statistical Areas", 
-            "description": "About ASA",
-            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/sa3s.geojson",
-            "contexts": {
-                "On": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/sa3s.json"
-                ],
-                "Off": [
-                ]
-            }
+            "name": "VObserv Feature Ex 1.1-LD",
+            "description": "OGC Vector Observation Feature 1.1 with @context",
+            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/examples/vectorObservationFeature/example_1_1.jsonld"
         },
         {
-            "name": "South African Cities",
-            "description": "About SA",
-            "uri": "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/datasets/cities.geojson",
-            "contexts": {
-                "On": [
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geojson.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/_geosparql-reduced.json",
-                    "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/contexts/cities.json"
-                ],
-                "Off": [
-                ]
-            }
+            "name": "Observ Example 1.1",
+            "description": "OGC Observation Example 1.1",
+            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/features/observation/example_1_1.json"
+        },
+        {
+            "name": "Observ Example 1.1-LD",
+            "description": "OGC Observation Example 1.1 with @context",
+            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/features/observation/example_1_1.jsonld"
         }
     ]
 }
