@@ -1,4 +1,42 @@
 
+async function resolveContext(...contextDefinitions) {
+  const resolvedContext = {};
+
+  // Loop through each context definition
+  for (const contextDef of contextDefinitions) {
+    if (Array.isArray(contextDef)) {
+      // Handle complex context definition that contains both a URL and an inline object
+      const [contextUrl, inlineContext] = contextDef;
+      if (typeof contextUrl === 'string') {
+        const response = await fetch(contextUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch context from ${contextUrl}`);
+        }
+        const contextObject = await response.json();
+        if (inlineContext && typeof inlineContext === 'object') {
+          contextObject['@context'] = { ...contextObject['@context'], ...inlineContext };
+        }
+        Object.assign(resolvedContext, contextObject);
+      }
+    } else if (typeof contextDef === 'string') {
+      // If the context definition is a URL, fetch and merge it
+      const contextUrl = contextDef;
+      const response = await fetch(contextUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch context from ${contextUrl}`);
+      }
+      const contextObject = await response.json();
+      Object.assign(resolvedContext, contextObject);
+    } else if (typeof contextDef === 'object') {
+      // If the context definition is an object, merge it
+      Object.assign(resolvedContext, contextDef);
+    }
+  }
+
+  return resolvedContext;
+}
+
+
 function flattenValue(value) {
   if (typeof value === 'object' && value !== null && '@value' in value) {
     return value['@value'];
@@ -44,7 +82,13 @@ async function expandProperties(featureNum, feature, context, log) {
 
   const idx = `Feature "${name}"`;
 
-  const ldExpanded = await jsonld.expand({...context, ...feature.properties});
+  console.log("CONTEXT = ", context)
+
+  const resolvedContext = await resolveContext(context);
+
+  log['Resolved Context'] = resolvedContext;
+
+  const ldExpanded = await jsonld.expand({...feature.properties}, {expandContext: resolvedContext });
   log[idx + ': JSON-LD expanded'] = ldExpanded;
   const flat = flattenExpandedJsonLd(ldExpanded);
   log[idx + ': Flatterned values'] = flat;
@@ -59,18 +103,21 @@ async function init(fileParam) {
   const log = {};
   log['Original'] = data;
 
+
   if(data['@context']) {
-    log['Context file'] = data['@context'];
-    const context = await (await fetch(data['@context'])).json();
-    log['Context loaded'] = context;
+    const context = data['@context'];
+    log['Context'] = context;
+//    const context = await (await fetch(data['@context'])).json();
+//    log['Context loaded'] = context;
     // manual process of features...
     if(data.type == 'Feature') {
         data = {type: 'FeatureCollection', features: [data]};
     }
     if(data.type == 'FeatureCollection' && data.features) {
-        data.features.forEach(async (feature, index)=>{
-            await expandProperties(index + 1, feature, context, log);
-        })
+        for(index in data.features) {
+          const feature = data.features[index];
+          await expandProperties(index + 1, feature, context, log);
+        }
     }
   } else {
     log['No context'] = 'No @context found';

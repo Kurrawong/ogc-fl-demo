@@ -37,9 +37,47 @@ function getAbsoluteURL(relativePath) {
     return absoluteURL;
 }
 
-async function mergeContexts(contextUrls) {
+// this function resolves a context that is a URL, or an object, or a combination into a result context object ready for jsonld expand
+async function resolveContext(...contextDefinitions) {
+  const resolvedContext = {};
+
+  // Loop through each context definition
+  for (const contextDef of contextDefinitions) {
+    if (Array.isArray(contextDef)) {
+      // Handle complex context definition that contains both a URL and an inline object
+      const [contextUrl, inlineContext] = contextDef;
+      if (typeof contextUrl === 'string') {
+        const response = await fetch(contextUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch context from ${contextUrl}`);
+        }
+        const contextObject = await response.json();
+        if (inlineContext && typeof inlineContext === 'object') {
+          contextObject['@context'] = { ...contextObject['@context'], ...inlineContext };
+        }
+        Object.assign(resolvedContext, contextObject);
+      }
+    } else if (typeof contextDef === 'string') {
+      // If the context definition is a URL, fetch and merge it
+      const contextUrl = contextDef;
+      const response = await fetch(contextUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch context from ${contextUrl}`);
+      }
+      const contextObject = await response.json();
+      Object.assign(resolvedContext, contextObject);
+    } else if (typeof contextDef === 'object') {
+      // If the context definition is an object, merge it
+      Object.assign(resolvedContext, contextDef);
+    }
+  }
+
+  return resolvedContext;
+}
+
+async function mergeContexts(contextUrls, contextData={}) {
     if(contextUrls.length == 0) {
-        return {}
+        return {'@context': contextData};
     }
     try {
       const contextResponses = await Promise.all(
@@ -50,7 +88,8 @@ async function mergeContexts(contextUrls) {
         "@context": {
           ...contextResponses.reduce((acc, response) => {
             return { ...acc, ...response["@context"] };
-          }, {})
+          }, {}),
+          ...contextData // Merge the provided contextData
         }
       };
   
@@ -90,7 +129,7 @@ function createTableFromJson(container, jsonData) {
             str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Properties'][key]}</div></li>`;
         })
         str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Semantic+</h3><ul class="collapsible">`;
+        str+= `<div class="col s3"><h3>Expanded</h3><ul class="collapsible">`;
         Object.keys(row['Expanded Properties']).map(key=>{
             str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Expanded Properties'][key]}</div></li>`;
         })
@@ -200,7 +239,10 @@ async function start() {
 
         let mergedContext = mergedContextBase;
         if(data['@context']) {
-            mergedContext = await mergeContexts([...contexts, getAbsoluteURL(data['@context'])])
+            const fileContext = await resolveContext(data['@context']);
+            console.log("FILE CONTEXT", fileContext)
+            mergedContext = await mergeContexts([...contexts], fileContext['@context']);
+            console.log("SETTING MXTC to ", mergedContext)
         }
 
         // clear all previous IRI references
@@ -222,7 +264,9 @@ async function start() {
             let propertiesExpanded = feature.properties;
             try {
 
-                propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...mergedContext, ...feature.properties}));
+                console.log("PROCESS", "FP=", feature.properties, "MERGED CTX", mergedContext)
+
+                propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...feature.properties}, {expandContext: mergedContext}));
                 console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
                 if(propertiesExpanded.length == 0) {
                     propertiesExpanded = feature.properties;
@@ -278,8 +322,7 @@ async function start() {
                     iriRefs[feature.properties.iri] = feature.properties.name;
                     iriLayers[feature.properties.iri] = layer;
                 }
-
-                const propertiesExpanded = await processFeatureProperties(feature)
+                const propertiesExpanded = await processFeatureProperties(feature);
 
                 layer.on('click', function() {
                     // Function to handle click event
@@ -303,17 +346,19 @@ async function start() {
 
         console.log("PROPERTIES", propTable);
         // no properties found
-        if(propTable.length == 0) {
-            // manual process of features...
-            if(data.type == 'Feature') {
-                data = {type: 'FeatureCollection', features: [data]};
+        setTimeout(()=>{
+            if(propTable.length == 0) {
+                // manual process of features...
+                if(data.type == 'Feature') {
+                    data = {type: 'FeatureCollection', features: [data]};
+                }
+                if(data.type == 'FeatureCollection' && data.features) {
+                    data.features.forEach(async feature=>{
+                        const propertiesExpanded = await processFeatureProperties(feature)
+                    })
+                }
             }
-            if(data.type == 'FeatureCollection' && data.features) {
-                data.features.forEach(async feature=>{
-                    const propertiesExpanded = await processFeatureProperties(feature)
-                })
-            }
-        }
+        }, 50);
 
 
         setTimeout(()=>{
@@ -548,7 +593,11 @@ let descriptionEl = document.getElementById('ds-description');
 function setActive(cb) {
     currentSource = cb;
     nameEl.innerText = cb.getAttribute('data-name');
-    descriptionEl.innerText = cb.getAttribute('data-description');
+    if(cb.getAttribute('data-description') == undefined) {
+        descriptionEl.innerText = cb.getAttribute('data-description');
+    } else {
+        descriptionEl.innerHTML = decodeURIComponent(cb.getAttribute('data-description-html'));
+    }
 }
 
 function setContext() {
@@ -652,13 +701,38 @@ async function mergeJsonFromUrls(urls) {
     return mergedData;
 }
 
+const dsFile = (path, dsFilePath) => {
+    if(path && !dsFilePath.match(/^(http|\.)/)) {
+        return path + dsFilePath;
+    } else {
+        return dsFilePath;
+    }
+}
+
 const init = async () => {
     try {
 
         const urlParams = new URLSearchParams(window.location.search);
         const configParam = urlParams.get('config');
-        const response = await fetch(configParam ? configParam : './config.json'); 
+        const response = await fetch(configParam ? configParam : './config.json');
         configData = await response.json();
+
+        const path = urlParams.get('path');
+        let ds = [];
+        for(let i = 1; i<=9; i++) {
+            const fn = urlParams.get('file' + i);
+            if(fn) {
+                ds.push({ name: "File " + i, descriptionHTML: 
+                    `<a href="${dsFile(path, fn)}" target="_new">${fn}</a>`,  
+                    "uri": dsFile(path, fn)});
+            } else {
+                break;
+            }
+        }
+        if(ds.length > 0) {
+            console.log(ds);
+            configData.datasets = ds;
+        }
 
         // get context quality labels
         let qualities = [];
@@ -685,6 +759,7 @@ const init = async () => {
                 data-group="datasets"
                 data-name="${dataset.name}" 
                 data-description="${dataset.description}"
+                data-description-html="${encodeURIComponent(dataset.descriptionHTML)}"
                 class="filled-in" ${!index && 'checked'} 
                 data-contexts=${encodeURIComponent(JSON.stringify(dataset.contexts))}
                 value="${dataset.uri}" type="checkbox" />
