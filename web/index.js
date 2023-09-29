@@ -115,6 +115,9 @@ function flattenExpandedJsonLd(expanded) {
     return flattened.length === 1 ? flattened[0] : flattened;
 }
 
+function outputValSimple(val) {
+    return (typeof val === 'object' && val !== null ? JSON.stringify(val) : val)    
+}
   
 function createTableFromJson(container, jsonData) {
     let str = '';
@@ -126,12 +129,12 @@ function createTableFromJson(container, jsonData) {
         str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
         str+= `<div class="col s3"><h3>Raw</h3><ul class="collapsible">`;
         Object.keys(row['Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Properties'][key]}</div></li>`;
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}}</div></li>`;
         })
         str+= '</ul></div>';
         str+= `<div class="col s3"><h3>Expanded</h3><ul class="collapsible">`;
         Object.keys(row['Expanded Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${row['Expanded Properties'][key]}</div></li>`;
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Expanded Properties'][key])}</div></li>`;
         })
         str+= '</ul></div>';
         str+= `<div class="col s3"><h3>Output <small>click item to explain</small></h3><ul class="activate collapsible">`;
