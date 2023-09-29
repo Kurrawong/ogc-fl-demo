@@ -403,7 +403,9 @@ async function start() {
                 log.push(text + ' and name found in annotations, get display text from annotation name')
             }
         }
-        var urlRegex = /(https?:\/\/[^\s]+)/g;
+        var urlRegex = /(https?:\/\/[^\s^"]+)/g;
+//        const mcount = text.match(urlRegex) ? text.match(urlRegex).length : 0;
+        const mcount = 2;  // temp measure to just remove the ext link icon for now...
         const outputStr = text.replace(urlRegex, function(url) {
             if((name != 'iri' && name != '@id') && url in iriRefs) {
                 log.push('iri found in internal list, create internal link');
@@ -413,10 +415,18 @@ async function start() {
                 if(name =='@id') {
                     log.push('@id name, create link');
                     val = url;
-                    return `<a data-tooltip=${url} class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
+                    if(mcount == 1) {
+                        return `<a class="ext" href="${url}">${url}<i class="material-icons">open_in_new</i></a>`;
+                    } else {
+                        return `<a href="${url}">${url}</a>`;
+                    }
                 } else {
                     val = (displayText != '' ? displayText : url)
-                    return `<a class="ext" href="${url}">${val}<i class="material-icons">open_in_new</i></a>`;
+                    if(mcount == 1) {
+                        return `<a class="ext" href="${url}">${val}<i class="material-icons">open_in_new</i></a>`;
+                    } else {
+                        return `<a href="${url}">${val}</a>`;
+                    }
                 }
             }
         });
@@ -447,26 +457,30 @@ async function start() {
         let helpValue = '';
         if(typeof(value) == 'object' && 'length' in value) {
             //log.push('Property is an array');
-            helpValue = value.join(', ');
+            helpValue = value.length == 0 ? '' : (typeof(value[0]) == 'object' ? JSON.stringify(value) : value.join(', '));
             let vals = [];
             strValue = value.map(val=>{ 
+                let isObj = false;
                 if(typeof val === 'object' && val !== null ) {
-                    val = JSON.stringify(val);
-                }    
+                    val = JSON.stringify(val, undefined, 2);
+                    isObj = true;
+                }
                 const outval = outputPropertyValue(name, val.toString(), annotations);
                 log = [...log, ...outval.log];
                 vals.push(outval.val); 
-                return outval.str;
+                return isObj ? `<pre>${outval.str}</pre>` : outval.str;
             }).join('<br/>');
             data.value = vals.join(', ');
         } else {
+            let isObj = false;
             if(typeof value === 'object' && value !== null ) {
                 value = JSON.stringify(value);
+                isObj = true;
             }    
             helpValue = value.toString();
             const outval = outputPropertyValue(name, value.toString(), annotations);
             log = [...log, ...outval.log];
-            strValue = outval.str;
+            strValue = isObj ? `<pre>${outval.str}</pre>` : outval.str;
             data.value = outval.val;
         }
 
@@ -540,16 +554,18 @@ async function start() {
         const displayName = 'https://schema.org/name' in properties ? properties['https://schema.org/name'] :
             '@id' in properties ? properties['@id'] : 'Unknown name or ID'
 
-        let info = `<table class="popup-table nonogc-props">`;
-        let infoOGC = `<table class="popup-table ogc-props">`;
+        let info = `<div class="tbl-container"><table class="popup-table nonogc-props">`;
+        let infoOGC = `<div class="tbl-container"><table class="popup-table ogc-props">`;
+
+        console.log("SHOW DETAILS", properties);
 
         for(prop in properties) {
 //            if(prop == '@id') continue;
             info+= analyseProperty(properties, prop, annotationConfig).tableRow;
             infoOGC+= analyseProperty(properties, prop, annotationConfigFull).tableRow;
         }
-        info+= '</table>'
-        infoOGC+= '</table>'
+        info+= '</table></div>'
+        infoOGC+= '</table></div>'
         //console.log(popupCoords);
 
         // Display the details in a popup or any other element on the page
@@ -575,7 +591,7 @@ async function start() {
         if (table && popupWidth && elLabel && elValues) {
             var maxWidth = popupWidth - 40;
             table.style.maxWidth = maxWidth + 'px';
-            table.style.width = maxWidth + 'px';
+            table.style.width = '100%';// + 'px';
             const labelWidth = elLabel.getBoundingClientRect().width;
             for (var i = 0; i < elValues.length; i++) {
                 elValues[i].style.maxWidth = (maxWidth - labelWidth - 20) + 'px';

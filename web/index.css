@@ -70,7 +70,7 @@ label {
 }
 
 .leaflet-popup-content {
-    width: 500px !important;
+    width: 800px !important;
 }
 
 .leaflet-popup-tip-container {
@@ -84,7 +84,21 @@ table.popup-table {
     table-layout: auto;
     margin-bottom:30px;
 }
-  
+
+.tbl-container {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.tbl-container pre {
+    overflow-x: auto;
+}
+
+table.popup-table {
+    margin-right:20px;
+}
+
 table.popup-table td, table.popup-table th {
     border: 1px solid #ccc;
     padding: 8px;
@@ -97,9 +111,9 @@ table.popup-table .tbl-label {
 
 table.popup-table .tbl-value {
     word-wrap: break-word;
-    white-space: nowrap;
+/*    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis;*/
     width:100%;
 }
 
