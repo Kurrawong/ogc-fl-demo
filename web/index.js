@@ -129,7 +129,7 @@ function createTableFromJson(container, jsonData) {
         str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
         str+= `<div class="col s3"><h3>Raw</h3><ul class="collapsible">`;
         Object.keys(row['Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}}</div></li>`;
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
         str+= '</ul></div>';
         str+= `<div class="col s3"><h3>Expanded</h3><ul class="collapsible">`;
