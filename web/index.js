@@ -37,6 +37,25 @@ function getAbsoluteURL(relativePath) {
     return absoluteURL;
 }
 
+async function getContextPrefixes(contextUrl) {
+    try {
+      // Fetch the context document
+      const response = await fetch(contextUrl);
+      const contextDocument = await response.text();
+  
+      // Parse the context document
+      const context = await jsonld.fromRDF(contextDocument, { format: 'application/nquads' });
+  
+      // Extract the prefixes from the context
+      const prefixes = Object.keys(context);
+  
+      return prefixes;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+}
+
 // this function resolves a context that is a URL, or an object, or a combination into a result context object ready for jsonld expand
 async function resolveContext(...contextDefinitions) {
   const resolvedContext = {};
@@ -127,17 +146,17 @@ function createTableFromJson(container, jsonData) {
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
         str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
-        str+= `<div class="col s3"><h3>Raw</h3><ul class="collapsible">`;
+        str+= `<div class="col s3"><h3>Raw<br/><small>properties found in dataset</small></h3><ul class="collapsible">`;
         Object.keys(row['Properties']).map(key=>{
             str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
         str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Expanded</h3><ul class="collapsible">`;
+        str+= `<div class="col s3"><h3>Expanded<br/><small>using context if available</small></h3><ul class="collapsible">`;
         Object.keys(row['Expanded Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Expanded Properties'][key])}</div></li>`;
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${flattenValue(row['Expanded Properties'][key])}</div></li>`;
         })
         str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Output <small>click item to explain</small></h3><ul class="activate collapsible">`;
+        str+= `<div class="col s3"><h3>Default enhanced semantics<br/><small>click item to explain</small></h3><ul class="activate collapsible">`;
         Object.keys(row['Resolved']).map(key=>{
             const val = row['Resolved'][key];
             const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
@@ -145,7 +164,7 @@ function createTableFromJson(container, jsonData) {
                 <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
         str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Output +OGC <small>click item to explain</small></h3><ul class="activate collapsible">`;
+        str+= `<div class="col s3"><h3>Linked data enhancements<br/><small>click item to explain</small></h3><ul class="activate collapsible">`;
         Object.keys(row['Resolved +OGC']).map(key=>{
             const val = row['Resolved +OGC'][key];
             const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
@@ -189,9 +208,48 @@ function flattenValue(value) {
       for (const key in value) {
         result[key] = flattenValue(value[key]);
       }
+      if(Object.keys(result).length == 1 && '@id' in result) {
+        return result['@id'];
+      }
+      if(Object.keys(result).length == 0) {
+        return '';
+      }
       return result;
     }
     return value;
+}
+
+function sortObjectByValues(sortObject, fullObject) {
+  const resultObject = {};
+
+  // Create an array of key-value pairs from sortObject and sort it based on values
+  const sortedKeys = Object.keys(sortObject).sort((a, b) => sortObject[a] - sortObject[b]);
+  // Iterate over the sorted keys and add them to resultObject
+  for (const key of sortedKeys) {
+    // Check if the key exists in the fullObject
+    if (key in fullObject) {
+      resultObject[key] = fullObject[key];
+    }
+  }
+  for(const key in fullObject) {
+    if(!(key in resultObject)) {
+        resultObject[key] = fullObject[key];
+    }
+  }
+
+  return resultObject;
+}
+
+function shortenLabel(label, context) {
+    if(label.match(/^https?:\/\//)) {
+        for(const key in context) {
+            const val = context[key].toString();
+            if(val.match(/^https?:\/\//) && label.indexOf(val) === 0) {
+                return label.replace(val, key + ':');
+            }
+        }
+    }
+    return label;
 }
 
 let propTable = [];
@@ -247,7 +305,8 @@ async function start() {
             mergedContext = await mergeContexts([...contexts], fileContext['@context']);
             console.log("SETTING MXTC to ", mergedContext)
         }
-
+        const labelContext = mergedContext && ('@context' in mergedContext) ? mergedContext['@context'] : {};
+//console.log("LABEL CTX", labelContext)
         // clear all previous IRI references
         iriRefs = {};
         iriLayers = {};
@@ -273,6 +332,14 @@ async function start() {
                 console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
                 if(propertiesExpanded.length == 0) {
                     propertiesExpanded = feature.properties;
+                } else {
+                    const keyObj = {};
+                    Object.keys(feature.properties).forEach((key, index)=>{
+                        keyObj[key] = index;
+                    })
+                    dummy = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
+                    propertiesExpanded = sortObjectByValues(dummy, propertiesExpanded);
+//                    console.log("DUMMY", dummy, sortObjectByValues(dummy, propertiesExpanded))
                 }
                 //console.log(propertiesExpanded);
             } catch (ex) {
@@ -283,8 +350,8 @@ async function start() {
 
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
             for(prop in propertiesExpanded) {
-                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig).data;
-                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull).data;
+                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}).data;
+                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext).data;
             }
 
             propTable.push({
@@ -333,7 +400,7 @@ async function start() {
                     console.log("1. SHOWING DETAILS FOR", feature.properties);
                     console.log("2. EXPANDED DETAILS", propertiesExpanded);
 
-                    showDetails(popupCoords, propertiesExpanded);//feature.properties);
+                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
                     if(layer.setStyle) {
                         if(lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
@@ -385,11 +452,13 @@ async function start() {
         var bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
 
         if(minLat !== Infinity) {
+            document.getElementById('emptymap').setAttribute('style', 'display:none');
             // Set the Leaflet map view to fit the bounding box
             map.fitBounds(bounds);
             bringToFrontLayers();
         } else {
-            switcher(true);
+            //switcher(true);
+            document.getElementById('emptymap').setAttribute('style', 'display:block');
         }
 
 
@@ -440,7 +509,7 @@ async function start() {
         }
     }
 
-    function analyseProperty(properties, name, annotations) {
+    function analyseProperty(properties, name, annotations, labelContext) {
         let log = []
         let value = properties[name]
         let data = {};
@@ -540,6 +609,13 @@ async function start() {
             data.value = strValue;
         } else {
             log.push('Property not found in annotations');
+            const newLabel = shortenLabel(data.label, labelContext);
+            console.log("Checking ", data.label, ' = ', newLabel)
+            if(newLabel != data.label) {
+                log.push('URI shortened before outputting label')
+                data.label = newLabel;
+                label = data.label;
+            }
         }
         data.log = log;
 
@@ -552,7 +628,7 @@ async function start() {
 
 
     // Function to handle the click event and display details
-    function showDetails(popupCoords, properties) {
+    function showDetails(popupCoords, properties, labelContext) {
 
         const displayName = 'https://schema.org/name' in properties ? properties['https://schema.org/name'] :
             '@id' in properties ? properties['@id'] : 'Unknown name or ID'
@@ -564,8 +640,8 @@ async function start() {
 
         for(prop in properties) {
 //            if(prop == '@id') continue;
-            info+= analyseProperty(properties, prop, annotationConfig).tableRow;
-            infoOGC+= analyseProperty(properties, prop, annotationConfigFull).tableRow;
+            info+= analyseProperty(properties, prop, annotationConfig, {}).tableRow;
+            infoOGC+= analyseProperty(properties, prop, annotationConfigFull, labelContext).tableRow;
         }
         info+= '</table></div>'
         infoOGC+= '</table></div>'
@@ -612,7 +688,7 @@ let descriptionEl = document.getElementById('ds-description');
 function setActive(cb) {
     currentSource = cb;
     nameEl.innerText = cb.getAttribute('data-name');
-    if(cb.getAttribute('data-description') == undefined) {
+    if(cb.getAttribute('data-description-html') == 'undefined') {
         descriptionEl.innerText = cb.getAttribute('data-description');
     } else {
         descriptionEl.innerHTML = decodeURIComponent(cb.getAttribute('data-description-html'));
@@ -742,7 +818,7 @@ const init = async () => {
             const fn = urlParams.get('file' + i);
             if(fn) {
                 ds.push({ name: "File " + i, descriptionHTML: 
-                    `<a href="${dsFile(path, fn)}" target="_new">${fn}</a>`,  
+                    `<a href="${dsFile(path, fn)}" target="_blank">${fn}</a>`,  
                     "uri": dsFile(path, fn)});
             } else {
                 break;
@@ -772,7 +848,12 @@ const init = async () => {
 
         const datasetsContainer = document.getElementById('datasets');
         const qualityContainer = document.getElementById('quality');
-        datasetsContainer.innerHTML = configData.datasets.map((dataset, index) => `
+        datasetsContainer.innerHTML = configData.datasets.map((dataset, index) => {
+            if(!dataset.descriptionHTML) {
+                dataset.descriptionHTML =  `<a href="${dataset.uri}" target="_blank">${dataset.description}</a>`;
+                dataset.description = 'undefined';
+            }
+            return `
             <label>
             <input
                 data-group="datasets"
@@ -784,7 +865,8 @@ const init = async () => {
                 value="${dataset.uri}" type="checkbox" />
             <span>${dataset.name}</span>
             </label>
-        `).join('');
+            `
+        }).join('');
         qualityContainer.innerHTML = qualities.map((quality, index)=>`
             <label>
             <input
