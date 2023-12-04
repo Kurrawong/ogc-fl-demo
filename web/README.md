@@ -45,3 +45,10 @@ __Note:__ This will load the application using the specific config URL
 __Default:__
 When you run the application with no config parameter, the default config.json provided in the project will be used.
 - https://kurrawong.github.io/ogc-fl-demo/web/
+
+## Custom resources to load (override the default list of resources)
+
+### path=#pathForFiles (optional)
+
+### file1..file9 = which files to show in the demo (overrides defaults)
+- when you click a file (resource), the description in the box in the bottom left provides a link to the displayed file resource

@@ -153,7 +153,7 @@ function createTableFromJson(container, jsonData) {
         str+= '</ul></div>';
         str+= `<div class="col s3"><h3>Expanded<br/><small>using context if available</small></h3><ul class="collapsible">`;
         Object.keys(row['Expanded Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${flattenValue(row['Expanded Properties'][key])}</div></li>`;
+            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Expanded Properties'][key])}</div></li>`;
         })
         str+= '</ul></div>';
         str+= `<div class="col s3"><h3>Default enhanced semantics<br/><small>click item to explain</small></h3><ul class="activate collapsible">`;
@@ -189,7 +189,7 @@ function ogcShine(el) {
     setTimeout(()=>{ 
         el.parentElement.setAttribute('class', isOGC ? 'ogc-off' : 'ogc-loaded')
         el.parentElement.getElementsByClassName('btn')[0].classList.add('disabled');
-        M.toast({html: (isOGC ? 'Rainbow shine removed' : 'Showing rainbow shine'), })
+        M.toast({html: (isOGC ? 'Linked data removed' : 'Showing linked data'), })
     }, 2500);
 }
   
@@ -651,7 +651,7 @@ async function start() {
         let popup = L.popup()
             .setLatLng(popupCoords)
             .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + info + infoOGC + 
-                `<button class="btn" onclick="ogcShine(this)">Add Rainbow Shine</button>` + 
+                `<button class="btn" onclick="ogcShine(this)">Use Linked Data</button>` + 
                 `<div class="progress-wrapper"><div class="progress"><div class="indeterminate"></div></div></div>` +
                 `</div>`)
             .openOn(map);
@@ -817,7 +817,7 @@ const init = async () => {
         for(let i = 1; i<=9; i++) {
             const fn = urlParams.get('file' + i);
             if(fn) {
-                ds.push({ name: "File " + i, descriptionHTML: 
+                ds.push({ name: "Resource " + i, descriptionHTML: 
                     `<a href="${dsFile(path, fn)}" target="_blank">${fn}</a>`,  
                     "uri": dsFile(path, fn)});
             } else {
