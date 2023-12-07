@@ -1,0 +1,47 @@
+{
+    "http://www.w3.org/2000/01/rdf-schema#seeAlso": {
+        "name": "seeAlso",
+        "description": "Further information about the subject resource.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#range": {
+        "name": "range",
+        "description": "A range of the subject property.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#comment": {
+        "name": "comment",
+        "description": "A description of the subject resource.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#label": {
+        "name": "label",
+        "description": "A human-readable name for the subject.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#member": {
+        "name": "member",
+        "description": "A member of the subject resource.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#subClassOf": {
+        "name": "subClassOf",
+        "description": "The subject is a subclass of a class.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#subPropertyOf": {
+        "name": "subPropertyOf",
+        "description": "The subject is a subproperty of a property.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#isDefinedBy": {
+        "name": "isDefinedBy",
+        "description": "The defininition of the subject resource.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#domain": {
+        "name": "domain",
+        "description": "A domain of the subject property.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    }
+}

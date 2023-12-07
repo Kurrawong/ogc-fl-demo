@@ -1,0 +1,95 @@
+{
+    "http://www.w3.org/ns/sosa/resultTime": {
+        "name": "result time",
+        "description": "The result time is the instant of time when the Observation, Actuation or Sampling activity was completed.",
+        "range": "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "http://www.w3.org/ns/sosa/hasSimpleResult": {
+        "name": "has simple result",
+        "description": "The simple value of an Observation or Actuation or act of Sampling."
+    },
+    "http://www.w3.org/ns/sosa/isResultOf": {
+        "name": "is result of",
+        "description": "Relation linking a Result to the Observation or Actuation or act of Sampling that created or caused it."
+    },
+    "http://www.w3.org/ns/sosa/isActedOnBy": {
+        "name": "is acted on by",
+        "description": "Relation between an ActuatableProperty of a FeatureOfInterest and an Actuation changing its state."
+    },
+    "http://www.w3.org/ns/sosa/hosts": {
+        "name": "hosts",
+        "description": "Relation between a Platform and a Sensor, Actuator, Sampler, or Platform, hosted or mounted on it."
+    },
+    "http://www.w3.org/ns/sosa/madeObservation": {
+        "name": "made observation",
+        "description": "Relation between a Sensor and an Observation made by the Sensor."
+    },
+    "http://www.w3.org/ns/sosa/isSampleOf": {
+        "name": "is sample of",
+        "description": "Relation from a Sample to the FeatureOfInterest that it is intended to be representative of."
+    },
+    "http://www.w3.org/ns/sosa/madeActuation": {
+        "name": "made actuation",
+        "description": "Relation between an Actuator and the Actuation it has made."
+    },
+    "http://www.w3.org/ns/sosa/madeBySensor": {
+        "name": "made by sensor",
+        "description": "Relation between an Observation and the Sensor which made the Observation."
+    },
+    "http://www.w3.org/ns/sosa/hasResult": {
+        "name": "has result",
+        "description": "Relation linking an Observation or Actuation or act of Sampling and a Result or Sample."
+    },
+    "http://www.w3.org/ns/sosa/hasSample": {
+        "name": "has sample",
+        "description": "Relation between a FeatureOfInterest and the Sample used to represent it."
+    },
+    "http://www.w3.org/ns/sosa/usedProcedure": {
+        "name": "used procedure",
+        "description": "A relation to link to a re-usable Procedure used in making an Observation, an Actuation, or a Sample, typically through a Sensor, Actuator or Sampler."
+    },
+    "http://www.w3.org/ns/sosa/isFeatureOfInterestOf": {
+        "name": "is feature of interest of",
+        "description": "A relation between a FeatureOfInterest and an Observation about it, an Actuation acting on it, or an act of Sampling that sampled it."
+    },
+    "http://www.w3.org/ns/sosa/madeBySampler": {
+        "name": "made by sampler",
+        "description": "Relation linking an act of Sampling to the Sampler (sampling device or entity) that made it."
+    },
+    "http://www.w3.org/ns/sosa/madeByActuator": {
+        "name": "made by actuator",
+        "description": "Relation linking an Actuation to the Actuator that made that Actuation."
+    },
+    "http://www.w3.org/ns/sosa/observedProperty": {
+        "name": "observed property",
+        "description": "Relation linking an Observation to the property that was observed. The ObservableProperty should be a property of the FeatureOfInterest (linked by hasFeatureOfInterest) of this Observation."
+    },
+    "http://www.w3.org/ns/sosa/isObservedBy": {
+        "name": "is observed by",
+        "description": "Relation between an ObservableProperty and the Sensor able to observe it."
+    },
+    "http://www.w3.org/ns/sosa/hasFeatureOfInterest": {
+        "name": "has feature of interest",
+        "description": "A relation between an Observation and the entity whose quality was observed, or between an Actuation and the entity whose property was modified, or between an act of Sampling and the entity that was sampled."
+    },
+    "http://www.w3.org/ns/sosa/madeSampling": {
+        "name": "made sampling",
+        "description": "Relation between a Sampler (sampling device or entity) and the Sampling act it performed."
+    },
+    "http://www.w3.org/ns/sosa/phenomenonTime": {
+        "name": "phenomenon time",
+        "description": "The time that the Result of an Observation, Actuation or Sampling applies to the FeatureOfInterest. Not necessarily the same as the resultTime. May be an Interval or an Instant, or some other compound TemporalEntity."
+    },
+    "http://www.w3.org/ns/sosa/actsOnProperty": {
+        "name": "acts on property",
+        "description": "Relation between an Actuation and the property of a FeatureOfInterest it is acting upon."
+    },
+    "http://www.w3.org/ns/sosa/isHostedBy": {
+        "name": "is hosted by",
+        "description": "Relation between a Sensor, Actuator, Sampler, or Platform, and the Platform that it is mounted on or hosted by."
+    },
+    "http://www.w3.org/ns/sosa/observes": {
+        "name": "observes",
+        "description": "Relation between a Sensor and an ObservableProperty that it is capable of sensing."
+    }
+}

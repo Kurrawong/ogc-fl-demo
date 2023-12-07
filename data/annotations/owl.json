@@ -1,0 +1,247 @@
+{
+    "http://www.w3.org/2002/07/owl#someValuesFrom": {
+        "name": "someValuesFrom",
+        "description": "The property that determines the class that an existential property restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/2002/07/owl#equivalentProperty": {
+        "name": "equivalentProperty",
+        "description": "The property that determines that two given properties are equivalent.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+    },
+    "http://www.w3.org/2002/07/owl#maxCardinality": {
+        "name": "maxCardinality",
+        "description": "The property that determines the cardinality of a maximum cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#intersectionOf": {
+        "name": "intersectionOf",
+        "description": "The property that determines the collection of classes or data ranges that build an intersection.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#members": {
+        "name": "members",
+        "description": "The property that determines the collection of members in either a owl:AllDifferent, owl:AllDisjointClasses or owl:AllDisjointProperties axiom.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#propertyDisjointWith": {
+        "name": "propertyDisjointWith",
+        "description": "The property that determines that two given properties are disjoint.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+    },
+    "http://www.w3.org/2002/07/owl#withRestrictions": {
+        "name": "withRestrictions",
+        "description": "The property that determines the collection of facet-value pairs that define a datatype restriction.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#hasValue": {
+        "name": "hasValue",
+        "description": "The property that determines the individual that a has-value restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#inverseOf": {
+        "name": "inverseOf",
+        "description": "The property that determines that two given properties are inverse.",
+        "range": "http://www.w3.org/2002/07/owl#ObjectProperty"
+    },
+    "http://www.w3.org/2002/07/owl#differentFrom": {
+        "name": "differentFrom",
+        "description": "The property that determines that two given individuals are different.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    },
+    "http://www.w3.org/2002/07/owl#onClass": {
+        "name": "onClass",
+        "description": "The property that determines the class that a qualified object cardinality restriction refers to.",
+        "range": "http://www.w3.org/2002/07/owl#Class"
+    },
+    "http://www.w3.org/2002/07/owl#hasKey": {
+        "name": "hasKey",
+        "description": "The property that determines the collection of properties that jointly build a key.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#equivalentClass": {
+        "name": "equivalentClass",
+        "description": "The property that determines that two given classes are equivalent, and that is used to specify datatype definitions.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/2002/07/owl#allValuesFrom": {
+        "name": "allValuesFrom",
+        "description": "The property that determines the class that a universal property restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/2002/07/owl#minQualifiedCardinality": {
+        "name": "minQualifiedCardinality",
+        "description": "The property that determines the cardinality of a minimum qualified cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#onDatatype": {
+        "name": "onDatatype",
+        "description": "The property that determines the datatype that a datatype restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Datatype"
+    },
+    "http://www.w3.org/2002/07/owl#complementOf": {
+        "name": "complementOf",
+        "description": "The property that determines that a given class is the complement of another class.",
+        "range": "http://www.w3.org/2002/07/owl#Class"
+    },
+    "http://www.w3.org/2002/07/owl#onProperty": {
+        "name": "onProperty",
+        "description": "The property that determines the property that a property restriction refers to.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+    },
+    "http://www.w3.org/2002/07/owl#onProperties": {
+        "name": "onProperties",
+        "description": "The property that determines the n-tuple of properties that a property restriction on an n-ary data range refers to.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#maxQualifiedCardinality": {
+        "name": "maxQualifiedCardinality",
+        "description": "The property that determines the cardinality of a maximum qualified cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#distinctMembers": {
+        "name": "distinctMembers",
+        "description": "The property that determines the collection of pairwise different individuals in a owl:AllDifferent axiom.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#annotatedTarget": {
+        "name": "annotatedTarget",
+        "description": "The property that determines the object of an annotated axiom or annotated annotation.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#minCardinality": {
+        "name": "minCardinality",
+        "description": "The property that determines the cardinality of a minimum cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#oneOf": {
+        "name": "oneOf",
+        "description": "The property that determines the collection of individuals or data values that build an enumeration.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#datatypeComplementOf": {
+        "name": "datatypeComplementOf",
+        "description": "The property that determines that a given data range is the complement of another data range with respect to the data domain.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Datatype"
+    },
+    "http://www.w3.org/2002/07/owl#annotatedSource": {
+        "name": "annotatedSource",
+        "description": "The property that determines the subject of an annotated axiom or annotated annotation.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#targetValue": {
+        "name": "targetValue",
+        "description": "The property that determines the value of a negative data property assertion.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+    },
+    "http://www.w3.org/2002/07/owl#onDataRange": {
+        "name": "onDataRange",
+        "description": "The property that determines the data range that a qualified data cardinality restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Datatype"
+    },
+    "http://www.w3.org/2002/07/owl#disjointWith": {
+        "name": "disjointWith",
+        "description": "The property that determines that two given classes are disjoint.",
+        "range": "http://www.w3.org/2002/07/owl#Class"
+    },
+    "http://www.w3.org/2002/07/owl#annotatedProperty": {
+        "name": "annotatedProperty",
+        "description": "The property that determines the predicate of an annotated axiom or annotated annotation.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#targetIndividual": {
+        "name": "targetIndividual",
+        "description": "The property that determines the object of a negative object property assertion.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    },
+    "http://www.w3.org/2002/07/owl#sourceIndividual": {
+        "name": "sourceIndividual",
+        "description": "The property that determines the subject of a negative property assertion.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    },
+    "http://www.w3.org/2002/07/owl#unionOf": {
+        "name": "unionOf",
+        "description": "The property that determines the collection of classes or data ranges that build a union.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#sameAs": {
+        "name": "sameAs",
+        "description": "The property that determines that two given individuals are equal.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    },
+    "http://www.w3.org/2002/07/owl#propertyChainAxiom": {
+        "name": "propertyChainAxiom",
+        "description": "The property that determines the n-tuple of properties that build a sub property chain of a given property.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#qualifiedCardinality": {
+        "name": "qualifiedCardinality",
+        "description": "The property that determines the cardinality of an exact qualified cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#assertionProperty": {
+        "name": "assertionProperty",
+        "description": "The property that determines the predicate of a negative property assertion.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+    },
+    "http://www.w3.org/2002/07/owl#cardinality": {
+        "name": "cardinality",
+        "description": "The property that determines the cardinality of an exact cardinality restriction.",
+        "range": "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+    },
+    "http://www.w3.org/2002/07/owl#disjointUnionOf": {
+        "name": "disjointUnionOf",
+        "description": "The property that determines that a given class is equivalent to the disjoint union of a collection of other classes.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/2002/07/owl#hasSelf": {
+        "name": "hasSelf",
+        "description": "The property that determines the property that a self restriction refers to.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#priorVersion": {
+        "name": "priorVersion",
+        "description": "The annotation property that indicates the predecessor ontology of a given ontology.",
+        "range": "http://www.w3.org/2002/07/owl#Ontology"
+    },
+    "http://www.w3.org/2002/07/owl#backwardCompatibleWith": {
+        "name": "backwardCompatibleWith",
+        "description": "The annotation property that indicates that a given ontology is backward compatible with another ontology.",
+        "range": "http://www.w3.org/2002/07/owl#Ontology"
+    },
+    "http://www.w3.org/2002/07/owl#deprecated": {
+        "name": "deprecated",
+        "description": "The annotation property that indicates that a given entity has been deprecated.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#incompatibleWith": {
+        "name": "incompatibleWith",
+        "description": "The annotation property that indicates that a given ontology is incompatible with another ontology.",
+        "range": "http://www.w3.org/2002/07/owl#Ontology"
+    },
+    "http://www.w3.org/2002/07/owl#versionInfo": {
+        "name": "versionInfo",
+        "description": "The annotation property that provides version information for an ontology or another OWL construct.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/2002/07/owl#bottomDataProperty": {
+        "name": "bottomDataProperty",
+        "description": "The data property that does not relate any individual to any data value.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+    },
+    "http://www.w3.org/2002/07/owl#topDataProperty": {
+        "name": "topDataProperty",
+        "description": "The data property that relates every individual to every data value.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Literal"
+    },
+    "http://www.w3.org/2002/07/owl#bottomObjectProperty": {
+        "name": "bottomObjectProperty",
+        "description": "The object property that does not relate any two individuals.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    },
+    "http://www.w3.org/2002/07/owl#topObjectProperty": {
+        "name": "topObjectProperty",
+        "description": "The object property that relates every two individuals.",
+        "range": "http://www.w3.org/2002/07/owl#Thing"
+    }
+}

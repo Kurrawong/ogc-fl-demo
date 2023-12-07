@@ -1,0 +1,47 @@
+{
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#direction": {
+        "name": "direction",
+        "description": "The base direction component of a CompoundLiteral.",
+        "seeAlso": "https://www.w3.org/TR/json-ld11/#the-rdf-compoundliteral-class-and-the-rdf-language-and-rdf-direction-properties"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": {
+        "name": "value",
+        "description": "Idiomatic property used for structured values.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#object": {
+        "name": "object",
+        "description": "The object of the subject RDF statement.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#language": {
+        "name": "language",
+        "description": "The language component of a CompoundLiteral.",
+        "seeAlso": "https://www.w3.org/TR/json-ld11/#the-rdf-compoundliteral-class-and-the-rdf-language-and-rdf-direction-properties"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest": {
+        "name": "rest",
+        "description": "The rest of the subject RDF list after the first item.",
+        "range": "http://www.w3.org/1999/02/22-rdf-syntax-ns#List"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate": {
+        "name": "predicate",
+        "description": "The predicate of the subject RDF statement.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": {
+        "name": "type",
+        "description": "The subject is an instance of a class.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Class"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#first": {
+        "name": "first",
+        "description": "The first item in the subject RDF list.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    },
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject": {
+        "name": "subject",
+        "description": "The subject of the subject RDF statement.",
+        "range": "http://www.w3.org/2000/01/rdf-schema#Resource"
+    }
+}
