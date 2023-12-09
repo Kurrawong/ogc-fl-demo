@@ -14,9 +14,8 @@
 </head>
 <body id="body" class="map-mode">
     <div class="main-container">
-        <div class="sidebar">
-            <h1 id="title">OGC Feature Label Demo</h1>
-            <blockquote id="about"></blockquote>
+        <div id="sidenav" class="sidebar">
+            <!-- <a href="#" style="display:block;text-align:right;"><i style="font-size:25px;color:black;" class="close-btn material-icons">close</i></a> -->
             <h2>Datasets</h2>
             <div id="datasets"></div>
             <!--h2>Semantic options</h2-->
@@ -29,7 +28,24 @@
             </div>
         </div>
         <div id="switch" style="width:100%;">
-            <div class="switch">
+            <div class="row" style="margin-bottom:0;">
+                <div class="col s1" style="width:40px;">
+                    <a href="#" id="sidenav-toggle" data-target="sidenav" class="sidenav-trigger">
+                        <i style="position:relative;font-size:25px;color:black;" class="material-icons">menu</i>
+                    </a>
+                </div>
+                <div class="col s4">
+                    <h1 id="title">OGC Feature Label Demo</h1>
+                    <blockquote id="about" style="margin-left:-40px;"></blockquote>
+                </div>
+                <form method="get" class="input-field col s7">
+                    <input name="file1" placeholder="Enter a URL resource to load" id="file1" type="text" class="validate">
+                    <label for="file1">Custom URL</label>
+                </form>
+                
+            </div>
+
+            <div class="switch" style="padding-left:10px;">
                 <label>
                 Map
                 <input id="cbswitcher" type="checkbox" value="1" onclick="switcher()">
@@ -41,7 +57,7 @@
             <div id="emptymap" style="display: none;">
                 <h2>No geospatial data to display, try table view</h2>
             </div>
-            <div id="map" style="height: 400px;"></div>
+            <div id="map" style="height: 400px;margin-left:10px;"></div>
             <div id="info"></div>
         </div>
     </div>

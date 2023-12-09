@@ -94,6 +94,10 @@ async function resolveContext(...contextDefinitions) {
   return resolvedContext;
 }
 
+async function lookupResolver(uri) {
+
+}
+
 async function mergeContexts(contextUrls, contextData={}) {
     if(contextUrls.length == 0) {
         return {'@context': contextData};
@@ -135,10 +139,10 @@ function flattenExpandedJsonLd(expanded) {
 }
 
 function outputValSimple(val) {
-    return (typeof val === 'object' && val !== null ? JSON.stringify(val) : val)    
+    return (typeof val === 'object' && val !== null ? '<pre>' + (val.length == 1 && val[0] ? val[0] : JSON.stringify(val, undefined, 2)) + '</pre>' : val)    
 }
   
-function createTableFromJson(container, jsonData) {
+function createTableFromJson(container, jsonData, rawContext, contextsMerged, annotations, annotationsOGC) {
     let str = '';
     jsonData.forEach((row, index)=>{
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
@@ -146,37 +150,75 @@ function createTableFromJson(container, jsonData) {
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
         str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
-        str+= `<div class="col s3"><h3>Raw<br/><small>properties found in dataset</small></h3><ul class="collapsible">`;
+        str+= `<div class="col s2"><h3>${configJson.labels.col1.title}<br/><small data-tooltip="${configJson.labels.col1.tooltip}">${configJson.labels.col1.description}</small></h3>`;
+        str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
+            str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Properties'][key])}</td></tr>`;
+            //str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
-        str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Expanded<br/><small>using context if available</small></h3><ul class="collapsible">`;
-        Object.keys(row['Expanded Properties']).map(key=>{
-            str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Expanded Properties'][key])}</div></li>`;
-        })
-        str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Default enhanced semantics<br/><small>click item to explain</small></h3><ul class="activate collapsible">`;
-        Object.keys(row['Resolved']).map(key=>{
-            const val = row['Resolved'][key];
-            const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
-            str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
-                <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
-        })
-        str+= '</ul></div>';
-        str+= `<div class="col s3"><h3>Linked data enhancements<br/><small>click item to explain</small></h3><ul class="activate collapsible">`;
+        str+= '</table></div></div>';
+        const ctx = rawContext ? (
+            rawContext != contextsMerged ? `@context=${JSON.stringify(rawContext).replaceAll('"', "'")} =`
+            : '') + JSON.stringify(contextsMerged).replaceAll('"', "'") : '';
+        str+= `<div class="col s2"><h3>${configJson.labels.col2.title}<br/><small data-tooltip="${configJson.labels.col2.tooltip}">
+            ${rawContext ? `${configJson.labels.col2.description}` :
+            configJson.labels.col2.descriptionNoContext}
+            </small></h3>`;
+        if(rawContext) {
+            str+= `<div class="tbl-container"><table class="popup-table">`;
+            Object.keys(row['Expanded Properties']).map(key=>{
+                str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
+            })
+            str+= '</table></div>';
+        }
+        str+= '</div>';
+        if(rawContext) {
+            str+= `<div class="col s2"><h3>${configJson.labels.col3.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col3.description}</small></h3>`;
+            str+= `<div class="tbl-container"><table class="popup-table">`;
+            Object.keys(row['Resolved']).map(key=>{
+                const val = row['Resolved'][key];
+
+                str+= val.tableRow;
+                // const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
+                // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
+                //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
+            })
+            str+= '</table></div></div>';
+            str+= `<div class="col s2"><h3>${configJson.labels.col4.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col4.description}</small></h3>`;
+            str+= `<div class="tbl-container"><table class="popup-table">`;
+            Object.keys(row['Resolved +OGC']).map(key=>{
+                const val = row['Resolved +OGC'][key];
+//                const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
+                str+= val.tableRow;
+                // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
+                //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
+            })
+            str+= '</table></div></div>';
+        }
+        str+= `<div class="col s2"><h3>${configJson.labels.col5.title}<br/><small data-tooltip="${configJson.labels.col5.tooltip}">${configJson.labels.col5.description}</small></h3>`;
+        str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Resolved +OGC']).map(key=>{
             const val = row['Resolved +OGC'][key];
-            const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
-            str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
-                <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
+  //          const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
+            str+= val.tableRow;
+            // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
+            //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
-        str+= '</ul></div>';
+        str+= '</table></div><br/><div class="btn">Lookup</div></div>';
+
         str+= '</div></div>'
     })
+
+    // str = 
+    //     + str;
+
     container.innerHTML = str;
-    const els = document.querySelectorAll('ul.collapsible.activate')
-    M.Collapsible.init(els);
+    // const els = document.querySelectorAll('ul.collapsible.activate')
+    // M.Collapsible.init(els);
+
+    let elems = container.querySelectorAll('[data-tooltip]:not([data-tooltip="undefined"]');
+    M.Tooltip.init(elems, {});
+
 }
 
 function ogcShine(el) {
@@ -299,6 +341,8 @@ async function start() {
     .then(async function(data) {
 
         let mergedContext = mergedContextBase;
+        let rawContext = data['@context'];
+        console.log("FETCH DATA", data);
         if(data['@context']) {
             const fileContext = await resolveContext(data['@context']);
             console.log("FILE CONTEXT", fileContext)
@@ -350,8 +394,8 @@ async function start() {
 
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
             for(prop in propertiesExpanded) {
-                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}).data;
-                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext).data;
+                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {});
+                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext);
             }
 
             propTable.push({
@@ -433,7 +477,7 @@ async function start() {
 
         setTimeout(()=>{
             document.getElementById('info').innerHTML = '';
-            createTableFromJson(document.getElementById('info'), propTable);
+            createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext, annotationConfig, annotationConfigFull);
 //            document.getElementById('info').innerHTML = JSON.stringify(propTable);
         }, 100);
 
@@ -804,6 +848,8 @@ const dsFile = (path, dsFilePath) => {
     }
 }
 
+let configJson = {};
+
 const init = async () => {
     try {
 
@@ -811,12 +857,16 @@ const init = async () => {
         const configParam = urlParams.get('config');
         const response = await fetch(configParam ? configParam : './config.json');
         configData = await response.json();
+        configJson = configData;
 
         const path = urlParams.get('path');
         let ds = [];
         for(let i = 1; i<=9; i++) {
             const fn = urlParams.get('file' + i);
             if(fn) {
+                if(i == 1) {
+                    document.getElementById('file1').value = fn;
+                }
                 ds.push({ name: "Resource " + i, descriptionHTML: 
                     `<a href="${dsFile(path, fn)}" target="_blank">${fn}</a>`,  
                     "uri": dsFile(path, fn)});
@@ -903,3 +953,22 @@ const init = async () => {
 };
 
 init()
+
+document.addEventListener('DOMContentLoaded', function() {
+    // var elems = document.querySelectorAll('.sidenav');
+    // var options = {};
+    // var instances = M.Sidenav.init(elems, options);
+    // var instance = M.Sidenav.getInstance(document.getElementById('sidenav'));
+    // instance.open();
+    // Close Button
+    var el = document.getElementById('sidenav')
+    var closeBtn = document.querySelector('#sidenav-toggle');
+    closeBtn.addEventListener('click', function() {
+        el.classList.toggle('hide');
+        // var sideNavInstance = M.Sidenav.getInstance(elems[0]);
+        // sideNavInstance.close();
+    }); 
+    
+});
+
+

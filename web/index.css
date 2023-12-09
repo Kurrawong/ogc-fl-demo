@@ -47,6 +47,8 @@ a.ext2 .material-icons {
     display:flex;
 }
 
+
+
 label {
     padding-right:10px;
     padding-bottom:5px;
@@ -61,6 +63,8 @@ label {
 .sidebar {
     width: 250px;
     padding-right:20px;
+    z-index:10000;
+    padding-left:20px;
 }
 
 #map {
@@ -228,3 +232,10 @@ table.popup-table .tbl-value {
 #info h3 {
     font-size:20px;
 }
+
+#info .container .tbl-container{
+    overflow: auto;
+    max-height: 300px;
+    overflow-x:scroll !important;
+}
+

@@ -3,6 +3,32 @@
     "about": "Version 2.1",
     "annotations": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json", "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json"],
     "annotationsOGC": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json"],
+    "labels": {
+        "col1": {
+            "title": "Raw",
+            "description": "properties found<br/>in dataset"
+        },
+        "col2": {
+            "title": "Expanded",
+            "description": "using @context<br/>&nbsp;",
+            "descriptionNoContext": "@context not available<br/>properties not expanded"
+        },
+        "col3": {
+            "title": "Default semantics",
+            "description": "using previously cached models<br/>&nbsp;",
+            "tooltip": "typically configured by a client to exploit common infrastructure usage"
+        },
+        "col4": {
+            "title": "Discovered semantics",
+            "description": "descriptions of data elements<br/>using linked data",
+            "tooltip": "these can typically be cached to improve performance"
+        },
+        "col5": {
+            "title": "Data lookups",
+            "description": "discovered descriptions of<br/>referenced data objects",
+            "tooltip": "Possible to follow the web addresses in data, however there are a number of aspects around this that relate to application design for the expected response forms available, whether there are 3rd party resolvers or whether to cache it. These are not easy to generalise, are application specific, and there can also be security management considerations for appropriate URL following."
+        }
+    },
     "datasets": [
         {
             "name": "VObserv Feature Ex 1.1",
