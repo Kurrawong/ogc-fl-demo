@@ -139,28 +139,33 @@ function flattenExpandedJsonLd(expanded) {
 }
 
 function outputValSimple(val) {
-    return (typeof val === 'object' && val !== null ? '<pre>' + (val.length == 1 && val[0] ? val[0] : JSON.stringify(val, undefined, 2)) + '</pre>' : val)    
+    return (typeof val === 'object' && val !== null ? '<pre>' + (val.length == 1 && val[0] ? (typeof val[0] == 'string' ? val[0] : JSON.stringify(val[0], undefined, 2)) : JSON.stringify(val, undefined, 2)) + '</pre>' : val)    
 }
   
 function createTableFromJson(container, jsonData, rawContext, contextsMerged, annotations, annotationsOGC) {
-    let str = '';
+    let mainstr = '';
+    let minWidthCol = -1;
     jsonData.forEach((row, index)=>{
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
-        str+= `<h2>Feature #${index + 1}${name}</h2><div class="container full"><div class="row">`
-        str+= `<div class="col s2"><h3>${configJson.labels.col1.title}<br/><small data-tooltip="${configJson.labels.col1.tooltip}">${configJson.labels.col1.description}</small></h3>`;
+        mainstr+= `<h2>Feature #${index + 1}${name}</h2>`
+
+        let cols = [];
+        let str = `<h3>${configJson.labels.col1.title}<br/><small data-tooltip="${configJson.labels.col1.tooltip}">${configJson.labels.col1.description}</small></h3>`;
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Properties']).map(key=>{
             str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Properties'][key])}</td></tr>`;
             //str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
-        str+= '</table></div></div>';
+        str+= '</table></div>';
+        cols.push(str);
+
         const ctx = rawContext ? (
             rawContext != contextsMerged ? `@context=${JSON.stringify(rawContext).replaceAll('"', "'")} =`
             : '') + JSON.stringify(contextsMerged).replaceAll('"', "'") : '';
-        str+= `<div class="col s2"><h3>${configJson.labels.col2.title}<br/><small data-tooltip="${configJson.labels.col2.tooltip}">
+        str = `<h3>${configJson.labels.col2.title}<br/><small data-tooltip="${configJson.labels.col2.tooltip}">
             ${rawContext ? `${configJson.labels.col2.description}` :
             configJson.labels.col2.descriptionNoContext}
             </small></h3>`;
@@ -170,10 +175,14 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
                 str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
             })
             str+= '</table></div>';
+        } else {
+            minWidthCol = cols.length;
         }
-        str+= '</div>';
+        cols.push(str);
+
         if(rawContext) {
-            str+= `<div class="col s2"><h3>${configJson.labels.col3.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col3.description}</small></h3>`;
+            str = '';
+            str+= `<h3>${configJson.labels.col3.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col3.description}</small></h3>`;
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved']).map(key=>{
                 const val = row['Resolved'][key];
@@ -183,8 +192,9 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
                 // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
-            str+= '</table></div></div>';
-            str+= `<div class="col s2"><h3>${configJson.labels.col4.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col4.description}</small></h3>`;
+            str+= '</table></div>';
+            cols.push(str);
+            str = `<h3>${configJson.labels.col4.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col4.description}</small></h3>`;
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved +OGC']).map(key=>{
                 const val = row['Resolved +OGC'][key];
@@ -193,9 +203,10 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
                 // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
-            str+= '</table></div></div>';
+            str+= '</table></div>';
+            cols.push(str);
         }
-        str+= `<div class="col s2"><h3>${configJson.labels.col5.title}<br/><small data-tooltip="${configJson.labels.col5.tooltip}">${configJson.labels.col5.description}</small></h3>`;
+        str = `<h3>${configJson.labels.col5.title}<br/><small data-tooltip="${configJson.labels.col5.tooltip}">${configJson.labels.col5.description}</small></h3>`;
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Resolved +OGC']).map(key=>{
             const val = row['Resolved +OGC'][key];
@@ -204,19 +215,27 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
             // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
             //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
-        str+= '</table></div><br/><div class="btn">Lookup</div></div>';
+        str+= '</table></div><br/><div class="btn">Lookup</div>';
+        cols.push(str);
 
-        str+= '</div></div>'
+        mainstr+= '<div class="props row">' + cols.map((col, idx)=>`<div class="props col${idx == minWidthCol ? ' min-width' : ''}">${col}</div>`).join('') + '</div>';
     })
 
     // str = 
     //     + str;
 
-    container.innerHTML = str;
+
+
+    container.innerHTML = mainstr;
     // const els = document.querySelectorAll('ul.collapsible.activate')
     // M.Collapsible.init(els);
 
-    let elems = container.querySelectorAll('[data-tooltip]:not([data-tooltip="undefined"]');
+    container.querySelectorAll('[data-tooltip]').forEach(el=>{
+        if(el.getAttribute('data-tooltip') == 'undefined') {
+            el.removeAttribute('data-tooltip');
+        }
+    })
+    let elems = container.querySelectorAll('[data-tooltip]');
     M.Tooltip.init(elems, {});
 
 }
@@ -391,7 +410,6 @@ async function start() {
             }
             // console.log("PROPS", feature.properties);
             // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
-
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
             for(prop in propertiesExpanded) {
                 propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {});
@@ -458,7 +476,7 @@ async function start() {
             }
         }).addTo(map);
 
-        console.log("PROPERTIES", propTable);
+//        console.log("PROPERTIES", propTable);
         // no properties found
         setTimeout(()=>{
             if(propTable.length == 0) {
@@ -590,7 +608,7 @@ async function start() {
         } else {
             let isObj = false;
             if(typeof value === 'object' && value !== null ) {
-                value = JSON.stringify(value);
+                value = JSON.stringify(value, undefined, 2);
                 isObj = true;
             }    
             helpValue = value.toString();
@@ -825,7 +843,7 @@ async function mergeJsonLdData(jsonDataArray) {
     }
   
     // Convert mergedData back to JSON-LD format
-    const mergedJsonLd = JSON.stringify(mergedData, null, 2);
+    const mergedJsonLd = JSON.stringify(mergedData, undefined, 2);
   
     return mergedJsonLd;
 }
@@ -954,6 +972,11 @@ const init = async () => {
 
 init()
 
+function sidebarHide() {
+    var el = document.getElementById('sidenav')
+    el.classList.add('hide')
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // var elems = document.querySelectorAll('.sidenav');
     // var options = {};
@@ -968,7 +991,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // var sideNavInstance = M.Sidenav.getInstance(elems[0]);
         // sideNavInstance.close();
     }); 
-    
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('file' + 1)) {
+        sidebarHide();
+    }
 });
 
 

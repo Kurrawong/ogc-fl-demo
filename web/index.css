@@ -239,3 +239,38 @@ table.popup-table .tbl-value {
     overflow-x:scroll !important;
 }
 
+.material-tooltip {
+    max-width: 450px;
+}
+
+
+.props.row {
+    display: flex;
+}
+
+.props.col {
+    flex: 1; /* Makes the columns flexible */
+    margin: 0 5px; /* Optional margin between columns */
+}
+
+.props.min-width {
+    flex: 0 0 auto; /* Allow this column to take only its content width */
+    /* width: 200px; */ /* No specific width set, allowing it to take only necessary space */
+}
+
+/* Optional: Add ellipsis for text overflow */
+.props.col table {
+    table-layout: fixed; /* Fix table layout */
+    width: 100%; /* Ensure table takes up full width of the column */
+}
+
+.props.col table td.tbl-value {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.props.col table td.tbl-label {
+    overflow-x: auto;
+    width:100%;
+}
+
