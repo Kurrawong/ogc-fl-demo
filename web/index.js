@@ -141,34 +141,68 @@ function flattenExpandedJsonLd(expanded) {
 function outputValSimple(val) {
     return (typeof val === 'object' && val !== null ? '<pre>' + (val.length == 1 && val[0] ? (typeof val[0] == 'string' ? val[0] : JSON.stringify(val[0], undefined, 2)) : JSON.stringify(val, undefined, 2)) + '</pre>' : val)    
 }
+
+function dataTooltip(str) {
+    if(str == 'undefined' || !str) {
+        return '';
+    } else {
+        return ' data-tooltip="' + str.replace('"', "'") + '"';
+    }
+}
   
-function createTableFromJson(container, jsonData, rawContext, contextsMerged, annotations, annotationsOGC) {
+function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     let mainstr = '';
     let minWidthCol = -1;
+    function header(id, descOverride) {
+        if(style == 'table') {
+            return `<h3>${configJson.labels['col' + id].title}<br/><small${dataTooltip(configJson.labels['col' + id].tooltip)}>${descOverride ? descOverride : configJson.labels['col' + id].description}</small></h3>`; 
+        } else {
+            return `<li class="tab col"><a href="#propcol${id}">${configJson.labels['col' + id].title}</a></li>`;
+            //<br/><small${dataTooltip(configJson.labels['col' + id].tooltip)}>${configJson.labels['col' + id].description}</small></a></li>`; 
+        }
+    }
+    function tab(id, contents) {
+        return `<div id="propcol${id}" class="col s12">${contents}</div>`;
+    }
+    let top = '';
     jsonData.forEach((row, index)=>{
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
-        mainstr+= `<h2>Feature #${index + 1}${name}</h2>`
+        if(style == 'table') {
+            mainstr+= `<h2>Feature #${index + 1}${name}</h2>`
+        }
 
         let cols = [];
-        let str = `<h3>${configJson.labels.col1.title}<br/><small data-tooltip="${configJson.labels.col1.tooltip}">${configJson.labels.col1.description}</small></h3>`;
+        let str = '';
+        if(style == 'tabs') {
+            top+= header(1);
+        } else {
+            str+= header(1);
+        }
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Properties']).map(key=>{
             str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Properties'][key])}</td></tr>`;
             //str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
         str+= '</table></div>';
+        if(style == 'tabs') {
+            str = tab(1, str);
+        }
         cols.push(str);
 
         const ctx = rawContext ? (
             rawContext != contextsMerged ? `@context=${JSON.stringify(rawContext).replaceAll('"', "'")} =`
             : '') + JSON.stringify(contextsMerged).replaceAll('"', "'") : '';
-        str = `<h3>${configJson.labels.col2.title}<br/><small data-tooltip="${configJson.labels.col2.tooltip}">
-            ${rawContext ? `${configJson.labels.col2.description}` :
-            configJson.labels.col2.descriptionNoContext}
-            </small></h3>`;
+
+        str = '';
+        if(style == 'tabs') {
+            top+= header(2, rawContext ? configJson.labels.col2.description : configJson.labels.col2.descriptionNoContext);
+        } else {
+            str+= header(2, rawContext ? configJson.labels.col2.description : configJson.labels.col2.descriptionNoContext);
+        }
+    
         if(rawContext) {
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Expanded Properties']).map(key=>{
@@ -178,11 +212,18 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
         } else {
             minWidthCol = cols.length;
         }
+        if(style == 'tabs') {
+            str = tab(2, str);
+        }
         cols.push(str);
 
         if(rawContext) {
             str = '';
-            str+= `<h3>${configJson.labels.col3.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col3.description}</small></h3>`;
+            if(style == 'tabs') {
+                top+= header(3);
+            } else {
+                str+= header(3);
+            }
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved']).map(key=>{
                 const val = row['Resolved'][key];
@@ -193,8 +234,16 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
             str+= '</table></div>';
+            if(style == 'tabs') {
+                str = tab(3, str);
+            }
             cols.push(str);
-            str = `<h3>${configJson.labels.col4.title}<br/><small data-tooltip="${configJson.labels.col3.tooltip}">${configJson.labels.col4.description}</small></h3>`;
+            str = '';
+            if(style == 'tabs') {
+                top+= header(4);
+            } else {
+                str+= header(4);
+            } 
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved +OGC']).map(key=>{
                 const val = row['Resolved +OGC'][key];
@@ -204,9 +253,17 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
             str+= '</table></div>';
+            if(style == 'tabs') {
+                str = tab(4, str);
+            }
             cols.push(str);
         }
-        str = `<h3>${configJson.labels.col5.title}<br/><small data-tooltip="${configJson.labels.col5.tooltip}">${configJson.labels.col5.description}</small></h3>`;
+        str = '';
+        if(style == 'tabs') {
+            top+= header(5);
+        } else {
+            str+= header(5);
+        }
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Resolved +OGC']).map(key=>{
             const val = row['Resolved +OGC'][key];
@@ -216,29 +273,58 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged, an
             //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
         str+= '</table></div><br/><div class="btn">Lookup</div>';
+        if(style == 'tabs') {
+            str = tab(5, str);
+        }
         cols.push(str);
 
-        mainstr+= '<div class="props row">' + cols.map((col, idx)=>`<div class="props col${idx == minWidthCol ? ' min-width' : ''}">${col}</div>`).join('') + '</div>';
+        if(style == 'table') {
+            mainstr+= '<div class="props row">' + cols.map((col, idx)=>`<div class="props col${idx == minWidthCol ? ' min-width' : ''}">${col}</div>`).join('') + '</div>';
+        } else {
+            mainstr+= '<div class="row"><ul id="proptabs" class="tabs col s12">' + top + '</ul>' + cols.map((col, idx)=>`${col}`).join('');
+        }
     })
 
     // str = 
     //     + str;
 
+    return mainstr;
+}
 
+function createTableFromJson(container, jsonData, rawContext, contextsMerged) {
+    const mainstr = getTableFromJson(jsonData, rawContext, contextsMerged, 'table');
 
     container.innerHTML = mainstr;
-    // const els = document.querySelectorAll('ul.collapsible.activate')
-    // M.Collapsible.init(els);
-
-    container.querySelectorAll('[data-tooltip]').forEach(el=>{
-        if(el.getAttribute('data-tooltip') == 'undefined') {
-            el.removeAttribute('data-tooltip');
-        }
-    })
     let elems = container.querySelectorAll('[data-tooltip]');
     M.Tooltip.init(elems, {});
 
 }
+
+function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, properties) {
+
+    const mainstr = getTableFromJson(jsonData, rawContext, contextsMerged, 'tabs');
+
+    const displayName = 'https://schema.org/name' in properties ? properties['https://schema.org/name'] :
+        '@id' in properties ? properties['@id'] : 'Unknown name or ID'
+
+
+    // Display the details in a popup or any other element on the page
+    let popup = L.popup()
+        .setLatLng(popupCoords)
+        .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + mainstr + 
+            `</div>`)
+        .openOn(map);
+
+    lastPopup = popup;
+
+    let elems = document.querySelectorAll('[data-tooltip]');
+    M.Tooltip.init(elems, {});
+
+    var instance = M.Tabs.init(document.querySelector('#proptabs'), {});
+  
+
+}
+
 
 function ogcShine(el) {
     //console.log('Std annotations', annotationConfig);
@@ -462,7 +548,10 @@ async function start() {
                     console.log("1. SHOWING DETAILS FOR", feature.properties);
                     console.log("2. EXPANDED DETAILS", propertiesExpanded);
 
-                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
+//                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
+                    createPopupFromJson(popupCoords, propTable, rawContext, mergedContext, feature.properties);
+
+
                     if(layer.setStyle) {
                         if(lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
@@ -495,7 +584,7 @@ async function start() {
 
         setTimeout(()=>{
             document.getElementById('info').innerHTML = '';
-            createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext, annotationConfig, annotationConfigFull);
+            createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
 //            document.getElementById('info').innerHTML = JSON.stringify(propTable);
         }, 100);
 

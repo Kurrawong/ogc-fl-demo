@@ -274,3 +274,6 @@ table.popup-table .tbl-value {
     width:100%;
 }
 
+.leaflet-popup-content {
+    min-height: 500px;
+}
