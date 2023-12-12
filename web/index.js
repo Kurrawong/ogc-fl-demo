@@ -250,8 +250,8 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         str = '';
         top+= header(5);
         str+= `<div class="tbl-container"><table class="popup-table">`;
-        Object.keys(row['Resolved +OGC']).map(key=>{
-            const val = row['Resolved +OGC'][key];
+        Object.keys(row['Lookups']).map(key=>{
+            const val = row['Lookups'][key];
   //          const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
             str+= val.tableRow;
             // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
@@ -510,10 +510,11 @@ async function start() {
             }
             // console.log("PROPS", feature.properties);
             // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
-            const propInfo = {'Resolved': {}, 'Resolved +OGC': {}};
+            const propInfo = {'Resolved': {}, 'Resolved +OGC': {}, 'Lookups': {}};
             for(prop in propertiesExpanded) {
-                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {});
-                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext);
+                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, false);
+                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, false);
+                propInfo['Lookups'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
             }
 
             propTable.push({
@@ -631,21 +632,56 @@ async function start() {
 
     });
 
-    function outputPropertyValue(name, text, annotations) {
+    function getAnnotation(text, annotations) {
+        // if the text value is found in annotations. and there is a name part in the annotation
+        if(typeof text == 'string' && text.match(/^https?:\/\//)) {
+            if(text in annotations && 'name' in annotations[text]) {
+                return annotations[text].name;
+            }
+        }
+        return false;
+    }
+
+    function outputPropertyValue(name, text, annotations, labelContext, dataLookup, nestLevel=0) {
         let displayText = '';
         let log = [];
         let val = text;
-        if(text.match(/^https?:\/\//)) {
-            if(text in annotations && 'name' in annotations[text]) {
-                displayText = annotations[text].name;
-                val = displayText;
-                log.push(text + ' and name found in annotations, get display text from annotation name')
+
+        // special outputting of an object
+        if(dataLookup && typeof(val) == 'object') {
+
+            if(!('length' in val) && nestLevel == 0) {
+                let disp = '<table>';
+                console.log("NEST OUT", val);
+                Object.keys(val).forEach(key=>{
+                    const outprop = analyseProperty(val, key, annotations, labelContext, dataLookup, nestLevel+1);
+                    disp+= outprop.tableRow;
+                })
+                disp+= '</table>';
+                text = disp;
+                return {
+                    log,
+                    val,
+                    str: text
+                }
+            } else {
+                text = JSON.stringify(val, undefined, 2);
             }
+            val = text;
         }
-        var urlRegex = /(https?:\/\/[^\s^"]+)/g;
+        if(typeof(text) == 'object') {
+            text = JSON.stringify(text, undefined, 2);
+        }
+
+        const anno = getAnnotation(text, annotations);
+        if(anno !== false) {
+            val = anno;
+            log.push(text + ' and name found in annotations, get display text from annotation name')
+        }
+        var urlRegex = /(https?:\/\/[^\s^"|<]+)/g;
 //        const mcount = text.match(urlRegex) ? text.match(urlRegex).length : 0;
         const mcount = 2;  // temp measure to just remove the ext link icon for now...
-        const outputStr = text.replace(urlRegex, function(url) {
+        const outputStr = typeof text == 'string' ? text.replace(urlRegex, function(url) {
             if((name != 'iri' && name != '@id') && url in iriRefs) {
                 log.push('iri found in internal list, create internal link');
                 val = iriRefs[url];
@@ -668,7 +704,9 @@ async function start() {
                     }
                 }
             }
-        });
+        }) : text;
+
+
         return {
             log,
             val,
@@ -676,7 +714,7 @@ async function start() {
         }
     }
 
-    function analyseProperty(properties, name, annotations, labelContext) {
+    function analyseProperty(properties, name, annotations, labelContext, dataLookup, nestLevel=0) {
         let log = []
         let value = properties[name]
         let data = {};
@@ -701,11 +739,12 @@ async function start() {
             let vals = [];
             strValue = value.map(val=>{ 
                 let isObj = false;
+                
                 if(typeof val === 'object' && val !== null ) {
-                    val = JSON.stringify(val, undefined, 2);
+                    //val = JSON.stringify(val, undefined, 2);
                     isObj = true;
                 }
-                const outval = outputPropertyValue(name, val.toString(), annotations);
+                const outval = outputPropertyValue(name, val, annotations, labelContext, dataLookup, nestLevel);
                 log = [...log, ...outval.log];
                 vals.push(outval.val); 
                 return isObj ? `<pre>${outval.str}</pre>` : outval.str;
@@ -713,12 +752,13 @@ async function start() {
             data.value = vals.join(', ');
         } else {
             let isObj = false;
+            let value2 = value;
             if(typeof value === 'object' && value !== null ) {
-                value = JSON.stringify(value, undefined, 2);
+                value2 = JSON.stringify(value, undefined, 2);
                 isObj = true;
-            }    
-            helpValue = value.toString();
-            const outval = outputPropertyValue(name, value.toString(), annotations);
+            }
+            helpValue = value2 !== undefined ? value2.toString() : '';
+            const outval = outputPropertyValue(name, value, annotations, labelContext, dataLookup, nestLevel);
             log = [...log, ...outval.log];
             strValue = isObj ? `<pre>${outval.str}</pre>` : outval.str;
             data.value = outval.val;
@@ -808,8 +848,8 @@ async function start() {
 
         for(prop in properties) {
 //            if(prop == '@id') continue;
-            info+= analyseProperty(properties, prop, annotationConfig, {}).tableRow;
-            infoOGC+= analyseProperty(properties, prop, annotationConfigFull, labelContext).tableRow;
+            info+= analyseProperty(properties, prop, annotationConfig, {}, false).tableRow;
+            infoOGC+= analyseProperty(properties, prop, annotationConfigFull, labelContext, false).tableRow;
         }
         info+= '</table></div>'
         infoOGC+= '</table></div>'
