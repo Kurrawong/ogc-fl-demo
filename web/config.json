@@ -6,11 +6,11 @@
         "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json",
         "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/owl.json",
         "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdfs.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdf.json"
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdf.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sosa.json"
     ],
     "annotationsOGC": [
         "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sosa.json",
         "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sdo.json"
     ],
     "defaults": {
