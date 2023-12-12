@@ -139,57 +139,64 @@ function flattenExpandedJsonLd(expanded) {
 }
 
 function outputValSimple(val) {
-    return (typeof val === 'object' && val !== null ? '<pre>' + (val.length == 1 && val[0] ? (typeof val[0] == 'string' ? val[0] : JSON.stringify(val[0], undefined, 2)) : JSON.stringify(val, undefined, 2)) + '</pre>' : val)    
+    return '<pre>' + (typeof val === 'object' && val !== null ? (val.length == 1 && val[0] ? (typeof val[0] == 'string' ? val[0] : JSON.stringify(val[0], undefined, 2)) : JSON.stringify(val, undefined, 2)) : val) + '</pre>';
 }
 
 function dataTooltip(str) {
     if(str == 'undefined' || !str) {
         return '';
     } else {
-        return ' data-tooltip="' + str.replace('"', "'") + '"';
+        return ` <span data-tooltip="${str.replace('"', "'")}"><i style="position:relative;font-size:25px;" class="material-icons">info</i></span>`;
     }
 }
-  
+
+let tabUID = 0;
+
 function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     let mainstr = '';
+    let featureIdx = 0;
+    const defActiveTab = configJson.defaults.tabCol;
+    if(style == 'table') {
+        mainstr+= '<ul class="collapsible">';
+    }
     let minWidthCol = -1;
-    function header(id, descOverride) {
-        if(style == 'table') {
-            return `<h3>${configJson.labels['col' + id].title}<br/><small${dataTooltip(configJson.labels['col' + id].tooltip)}>${descOverride ? descOverride : configJson.labels['col' + id].description}</small></h3>`; 
-        } else {
-            return `<li class="tab col"><a href="#propcol${id}">${configJson.labels['col' + id].title}</a></li>`;
-            //<br/><small${dataTooltip(configJson.labels['col' + id].tooltip)}>${configJson.labels['col' + id].description}</small></a></li>`; 
-        }
+    function header(id) {
+        tabUID+= 1;
+        return `<li class="tab col"><a ${id == defActiveTab ? 'class="active" ' : ''}href="#propcol${tabUID}_${featureIdx}_${id}">${configJson.labels['col' + id].title}</a></li>`;
     }
-    function tab(id, contents) {
-        return `<div id="propcol${id}" class="col s12">${contents}</div>`;
+    function tab(id, contents, descOverride) {
+        return `<div id="propcol${tabUID}_${featureIdx}_${id}" class="col s12">
+            <h5>
+                ${descOverride ? descOverride : configJson.labels['col' + id].description}
+                ${dataTooltip(configJson.labels['col' + id].tooltip)}
+            </h5>
+            ${contents}
+        </div>`;
     }
-    let top = '';
     jsonData.forEach((row, index)=>{
+        featureIdx = index;
+        let top = '';
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
         if(style == 'table') {
-            mainstr+= `<h2>Feature #${index + 1}${name}</h2>`
+            mainstr+= `<li${featureIdx == 0 ? ' class="active"' : ''}>
+            <div class="collapsible-header"><i class="material-icons">arrow</i>Feature #${index + 1}${name}</div>
+            <div class="collapsible-body">
+            `;
         }
 
         let cols = [];
         let str = '';
-        if(style == 'tabs') {
-            top+= header(1);
-        } else {
-            str+= header(1);
-        }
+        top+= header(1);
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Properties']).map(key=>{
             str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Properties'][key])}</td></tr>`;
             //str+= `<li><div class="collapsible-header"><b>${key}:</b> ${outputValSimple(row['Properties'][key])}</div></li>`;
         })
         str+= '</table></div>';
-        if(style == 'tabs') {
-            str = tab(1, str);
-        }
+        str = tab(1, str);
         cols.push(str);
 
         const ctx = rawContext ? (
@@ -197,11 +204,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
             : '') + JSON.stringify(contextsMerged).replaceAll('"', "'") : '';
 
         str = '';
-        if(style == 'tabs') {
-            top+= header(2, rawContext ? configJson.labels.col2.description : configJson.labels.col2.descriptionNoContext);
-        } else {
-            str+= header(2, rawContext ? configJson.labels.col2.description : configJson.labels.col2.descriptionNoContext);
-        }
+        top+= header(2);
     
         if(rawContext) {
             str+= `<div class="tbl-container"><table class="popup-table">`;
@@ -212,18 +215,12 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         } else {
             minWidthCol = cols.length;
         }
-        if(style == 'tabs') {
-            str = tab(2, str);
-        }
+        str = tab(2, str, rawContext ? configJson.labels.col2.description : configJson.labels.col2.descriptionNoContext);
         cols.push(str);
 
         if(rawContext) {
             str = '';
-            if(style == 'tabs') {
-                top+= header(3);
-            } else {
-                str+= header(3);
-            }
+            top+= header(3);
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved']).map(key=>{
                 const val = row['Resolved'][key];
@@ -234,16 +231,10 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
             str+= '</table></div>';
-            if(style == 'tabs') {
-                str = tab(3, str);
-            }
+            str = tab(3, str);
             cols.push(str);
             str = '';
-            if(style == 'tabs') {
-                top+= header(4);
-            } else {
-                str+= header(4);
-            } 
+            top+= header(4);
             str+= `<div class="tbl-container"><table class="popup-table">`;
             Object.keys(row['Resolved +OGC']).map(key=>{
                 const val = row['Resolved +OGC'][key];
@@ -253,17 +244,11 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
                 //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
             })
             str+= '</table></div>';
-            if(style == 'tabs') {
-                str = tab(4, str);
-            }
+            str = tab(4, str);
             cols.push(str);
         }
         str = '';
-        if(style == 'tabs') {
-            top+= header(5);
-        } else {
-            str+= header(5);
-        }
+        top+= header(5);
         str+= `<div class="tbl-container"><table class="popup-table">`;
         Object.keys(row['Resolved +OGC']).map(key=>{
             const val = row['Resolved +OGC'][key];
@@ -273,20 +258,20 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
             //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
         str+= '</table></div><br/><div class="btn">Lookup</div>';
-        if(style == 'tabs') {
-            str = tab(5, str);
-        }
+        str = tab(5, str);
         cols.push(str);
 
+        mainstr+= '<div class="row"><ul class="proptabs tabs col s12">' + top + '</ul>' + cols.map((col, idx)=>`${col}`).join('');
+
         if(style == 'table') {
-            mainstr+= '<div class="props row">' + cols.map((col, idx)=>`<div class="props col${idx == minWidthCol ? ' min-width' : ''}">${col}</div>`).join('') + '</div>';
-        } else {
-            mainstr+= '<div class="row"><ul id="proptabs" class="tabs col s12">' + top + '</ul>' + cols.map((col, idx)=>`${col}`).join('');
+            mainstr+= `</div></li>`;
         }
+
     })
 
-    // str = 
-    //     + str;
+    if(style == 'table') {
+        mainstr+= '</ul>';
+    }
 
     return mainstr;
 }
@@ -295,8 +280,19 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged) {
     const mainstr = getTableFromJson(jsonData, rawContext, contextsMerged, 'table');
 
     container.innerHTML = mainstr;
+    container.style.display = 'block';
     let elems = container.querySelectorAll('[data-tooltip]');
     M.Tooltip.init(elems, {});
+
+    setTimeout(()=>{
+        var instance = M.Tabs.init(container.querySelectorAll('.proptabs'), {});
+        setTimeout(()=>{
+            container.style.display = '';
+        });
+    });
+
+    var elemsul = container.querySelectorAll('.collapsible');
+    var instances = M.Collapsible.init(elemsul, {});
 
 }
 
@@ -307,21 +303,39 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
     const displayName = 'https://schema.org/name' in properties ? properties['https://schema.org/name'] :
         '@id' in properties ? properties['@id'] : 'Unknown name or ID'
 
-
+    let contentElement = document.createElement('div');
+    contentElement.innerHTML = `<div class="ogc-off"><h2>${displayName}</h2><div style="max-height:400px;overflow:scroll;">` + mainstr + `</div></div>`;
+        
     // Display the details in a popup or any other element on the page
     let popup = L.popup()
         .setLatLng(popupCoords)
-        .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + mainstr + 
-            `</div>`)
         .openOn(map);
+
+    var popupContent = popup.getElement()
+    popup.setContent(contentElement)
 
     lastPopup = popup;
 
-    let elems = document.querySelectorAll('[data-tooltip]');
-    M.Tooltip.init(elems, {});
+    var instance = M.Tabs.init(contentElement.querySelectorAll('.proptabs'), {});
 
-    var instance = M.Tabs.init(document.querySelector('#proptabs'), {});
-  
+    var popupWidth = popup.getElement().clientWidth
+
+    var table = popupContent.querySelector('.popup-table');
+    var elLabel = popupContent.querySelector('.popup-table .tbl-label');
+    var elValues = popupContent.querySelectorAll('.popup-table .tbl-value');
+    if (table && popupWidth && elLabel && elValues) {
+        var maxWidth = popupWidth - 40;
+        table.style.maxWidth = maxWidth + 'px';
+        table.style.width = '100%';// + 'px';
+        const labelWidth = elLabel.getBoundingClientRect().width;
+        for (var i = 0; i < elValues.length; i++) {
+            elValues[i].style.maxWidth = (maxWidth - labelWidth - 20) + 'px';
+        }
+    }
+
+
+    let elems = document.querySelectorAll('[data-tooltip]');
+    M.Tooltip.init(elems, {});  
 
 }
 
@@ -475,10 +489,10 @@ async function start() {
             let propertiesExpanded = feature.properties;
             try {
 
-                console.log("PROCESS", "FP=", feature.properties, "MERGED CTX", mergedContext)
+//                console.log("PROCESS", "FP=", feature.properties, "MERGED CTX", mergedContext)
 
                 propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...feature.properties}, {expandContext: mergedContext}));
-                console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
+//                console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
                 if(propertiesExpanded.length == 0) {
                     propertiesExpanded = feature.properties;
                 } else {
@@ -511,7 +525,7 @@ async function start() {
         }
 
         console.log('FEATURE DATA', data);
-
+        let fIdx = 0;
         // Create a Leaflet GeoJSON layer and add it to the map
         geojsonLayer = L.geoJSON(data, {
             onEachFeature: async function(feature, layer) {
@@ -541,6 +555,7 @@ async function start() {
                     iriLayers[feature.properties.iri] = layer;
                 }
                 const propertiesExpanded = await processFeatureProperties(feature);
+                const lastFeature = [propTable[fIdx]];
 
                 layer.on('click', function() {
                     // Function to handle click event
@@ -549,7 +564,7 @@ async function start() {
                     console.log("2. EXPANDED DETAILS", propertiesExpanded);
 
 //                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
-                    createPopupFromJson(popupCoords, propTable, rawContext, mergedContext, feature.properties);
+                    createPopupFromJson(popupCoords, lastFeature, rawContext, mergedContext, feature.properties);
 
 
                     if(layer.setStyle) {
@@ -561,6 +576,7 @@ async function start() {
                         lastLayer = layer;
                     }
                 });
+                fIdx++;
 
             }
         }).addTo(map);
@@ -672,7 +688,8 @@ async function start() {
             log.push('Default label set to #part');
         }
 
-        let label = defLabel.indexOf('http') == 0 ? defLabel : capitalizeFirstChar(defLabel);
+        let label = defLabel;
+        //defLabel.indexOf('http') == 0 ? defLabel : capitalizeFirstChar(defLabel);
 
         let r = '';
 
@@ -761,7 +778,7 @@ async function start() {
         } else {
             log.push('Property not found in annotations');
             const newLabel = shortenLabel(data.label, labelContext);
-            console.log("Checking ", data.label, ' = ', newLabel)
+            //console.log("Checking ", data.label, ' = ', newLabel)
             if(newLabel != data.label) {
                 log.push('URI shortened before outputting label')
                 data.label = newLabel;
@@ -772,7 +789,7 @@ async function start() {
 
         return {
             data,
-            tableRow: r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value">${strValue}</td></tr>`
+            tableRow: r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value"><pre>${strValue}</pre></td></tr>`
         }
         
     }
@@ -965,6 +982,10 @@ const init = async () => {
         const response = await fetch(configParam ? configParam : './config.json');
         configData = await response.json();
         configJson = configData;
+        let elems = document.querySelectorAll('[data-tooltip]');
+        M.Tooltip.init(elems, {});    
+
+        document.getElementById('helpLink').setAttribute('href', configJson.helpLink);
 
         const path = urlParams.get('path');
         let ds = [];

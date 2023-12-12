@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="index.css" />
 </head>
 <body id="body" class="map-mode">
+
+
     <div class="main-container">
         <div id="sidenav" class="sidebar">
             <!-- <a href="#" style="display:block;text-align:right;"><i style="font-size:25px;color:black;" class="close-btn material-icons">close</i></a> -->
@@ -40,7 +42,7 @@
                 </div>
                 <form method="get" class="input-field col s7">
                     <input name="file1" placeholder="Enter a URL resource to load" id="file1" type="text" class="validate">
-                    <label for="file1">Custom URL</label>
+                    <label for="file1">Custom URL <a data-tooltip="Read more about the options available" id="helpLink" target="_blank" class="ext" href="#"><i class="material-icons">open_in_new</i></a></label>
                 </form>
                 
             </div>
@@ -58,7 +60,7 @@
                 <h2>No geospatial data to display, try table view</h2>
             </div>
             <div id="map" style="height: 400px;margin-left:10px;"></div>
-            <div id="info"></div>
+            <div id="info"></div>        
         </div>
     </div>
     <!-- Compiled and minified JavaScript -->
@@ -67,5 +69,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
     <!-- Main application JS -->
     <script src="index.js"></script>
+    <script>
+    var instance = M.Tabs.init(document.querySelectorAll('.tabtest'), {});
+    </script>
 </body>
 </html>

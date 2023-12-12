@@ -1,31 +1,45 @@
 {
     "title": "OGC Feature Label Demo",
     "about": "Version 2.1",
-    "annotations": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json", "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json"],
-    "annotationsOGC": ["https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json"],
+    "annotations": [
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/owl.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdfs.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdf.json"
+    ],
+    "annotationsOGC": [
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sosa.json",
+        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sdo.json"
+    ],
+    "defaults": {
+        "tabCol": 1
+    },
+    "helpLink": "https://github.com/Kurrawong/ogc-fl-demo/tree/gh-pages/web#readme",
     "labels": {
         "col1": {
             "title": "Raw",
-            "description": "properties found<br/>in dataset"
+            "description": "Showing original properties found in dataset"
         },
         "col2": {
             "title": "Expanded",
-            "description": "using @context<br/>&nbsp;",
-            "descriptionNoContext": "@context not available<br/>properties not expanded"
+            "description": "Showing properties after expanding using @context",
+            "descriptionNoContext": "Unable to expand properties, @context not provided"
         },
         "col3": {
             "title": "Default semantics",
-            "description": "using previously cached models<br/>&nbsp;",
-            "tooltip": "typically configured by a client to exploit common infrastructure usage"
+            "description": "Applying previously cached models to the properties",
+            "tooltip": "Typically configured by a client to exploit common infrastructure usage"
         },
         "col4": {
             "title": "Discovered semantics",
-            "description": "descriptions of data elements<br/>using linked data",
-            "tooltip": "these can typically be cached to improve performance"
+            "description": "Showing descriptions of data elements using linked data",
+            "tooltip": "These can typically be cached to improve performance"
         },
         "col5": {
             "title": "Data lookups",
-            "description": "discovered descriptions of<br/>referenced data objects",
+            "description": "Discovered descriptions of referenced data objects",
             "tooltip": "Possible to follow the web addresses in data, however there are a number of aspects around this that relate to application design for the expected response forms available, whether there are 3rd party resolvers or whether to cache it. These are not easy to generalise, are application specific, and there can also be security management considerations for appropriate URL following."
         }
     },

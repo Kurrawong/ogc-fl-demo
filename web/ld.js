@@ -82,7 +82,7 @@ async function expandProperties(featureNum, feature, context, log) {
 
   const idx = `Feature "${name}"`;
 
-  console.log("CONTEXT = ", context)
+//  console.log("CONTEXT = ", context)
 
   const resolvedContext = await resolveContext(context);
 
