@@ -512,8 +512,8 @@ async function start() {
             // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}, 'Lookups': {}};
             for(prop in propertiesExpanded) {
-                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, false);
-                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, false);
+                propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, true);
+                propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
                 propInfo['Lookups'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
             }
 
