@@ -177,6 +177,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         featureIdx = index;
         let top = '';
         let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
+        //console.log(name);
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
         
@@ -648,11 +649,11 @@ async function start() {
         let val = text;
 
         // special outputting of an object
-        if(dataLookup && typeof(val) == 'object') {
+        if(dataLookup && typeof(val) == 'object' && val !== null) {
 
             if(!('length' in val) && nestLevel == 0) {
                 let disp = '<table>';
-                console.log("NEST OUT", val);
+                //console.log("NEST OUT", val);
                 Object.keys(val).forEach(key=>{
                     const outprop = analyseProperty(val, key, annotations, labelContext, dataLookup, nestLevel+1);
                     disp+= outprop.tableRow;
@@ -733,7 +734,8 @@ async function start() {
 
         let strValue = '';
         let helpValue = '';
-        if(typeof(value) == 'object' && 'length' in value) {
+        console.log(value);
+        if(value && typeof(value) == 'object' && 'length' in value) {
             //log.push('Property is an array');
             helpValue = value.length == 0 ? '' : (typeof(value[0]) == 'object' ? JSON.stringify(value) : value.join(', '));
             let vals = [];
@@ -757,7 +759,7 @@ async function start() {
                 value2 = JSON.stringify(value, undefined, 2);
                 isObj = true;
             }
-            helpValue = value2 !== undefined ? value2.toString() : '';
+            helpValue = value2 !== undefined && value !== null ? value2.toString() : '';
             const outval = outputPropertyValue(name, value, annotations, labelContext, dataLookup, nestLevel);
             log = [...log, ...outval.log];
             strValue = isObj ? `<pre>${outval.str}</pre>` : outval.str;
