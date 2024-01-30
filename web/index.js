@@ -236,7 +236,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
             cols.push(str);
             str = '';
             top+= header(4);
-            str+= `<div class="tbl-container"><table class="popup-table">`;
+            str+= `<div class="tbl-container table-lookups"><table class="popup-table">`;
             Object.keys(row['Resolved +OGC']).map(key=>{
                 const val = row['Resolved +OGC'][key];
 //                const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
@@ -250,7 +250,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         }
         str = '';
         top+= header(5);
-        str+= `<div class="tbl-container"><table class="popup-table">`;
+        str+= `<div class="tbl-container table-lookups value-lookups"><table class="popup-table">`;
         Object.keys(row['Lookups']).map(key=>{
             const val = row['Lookups'][key];
   //          const oval = (typeof val === 'object' && val !== null ? JSON.stringify(val) : val);
@@ -258,7 +258,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
             // str+= `<li><div class="collapsible-header"><b>${val.label}:</b> <span>${val.value}</span></div>
             //     <div class="collapsible-body"><pre>${val.log.join('\n')}</pre></div></li>`;
         })
-        str+= '</table></div><br/><div class="btn">Lookup</div>';
+        str+= '</table></div>';
         str = tab(5, str);
         cols.push(str);
 
@@ -281,6 +281,7 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged) {
     const mainstr = getTableFromJson(jsonData, rawContext, contextsMerged, 'table');
 
     container.innerHTML = mainstr;
+    lookup();
     container.style.display = 'block';
     let elems = container.querySelectorAll('[data-tooltip]');
     M.Tooltip.init(elems, {});
@@ -333,7 +334,7 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
             elValues[i].style.maxWidth = (maxWidth - labelWidth - 20) + 'px';
         }
     }
-
+    lookup();
 
     let elems = document.querySelectorAll('[data-tooltip]');
     M.Tooltip.init(elems, {});  
@@ -603,7 +604,10 @@ async function start() {
         setTimeout(()=>{
             document.getElementById('info').innerHTML = '';
             createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
-//            document.getElementById('info').innerHTML = JSON.stringify(propTable);
+//            setTimeout(()=>{
+//                document.getElementById('info').innerHTML = JSON.stringify(propTable);
+//                lookup();
+//            }, 150);
         }, 100);
 
         map.on("click", function(event) {
@@ -734,7 +738,7 @@ async function start() {
 
         let strValue = '';
         let helpValue = '';
-        console.log(value);
+//        console.log(value);
         if(value && typeof(value) == 'object' && 'length' in value) {
             //log.push('Property is an array');
             helpValue = value.length == 0 ? '' : (typeof(value[0]) == 'object' ? JSON.stringify(value) : value.join(', '));
@@ -766,6 +770,7 @@ async function start() {
             data.value = outval.val;
         }
 
+        let dv = false;
         data.label = label;
         if(name in annotations) {
             log.push('Property found in annotations');
@@ -823,19 +828,25 @@ async function start() {
             //console.log("Checking ", data.label, ' = ', newLabel)
             if(newLabel != data.label) {
                 log.push('URI shortened before outputting label')
-                data.label = newLabel;
-                label = data.label;
+                data.label = '<span data-lookup=' + data.label + '>' + newLabel + '</span>';
+            } else {
+                data.label = '<span data-lookup=' + data.label + '>' + data.label + '</span>';
             }
+            dv = true
+            // if(nestLevel > 0) {
+            //     dv = true
+            // }
+            label = data.label;
         }
         data.log = log;
-
+        dv = true;
         return {
             data,
-            tableRow: r + `<tr><td class="tbl-label">${label}</td><td class="tbl-value"><pre>${strValue}</pre></td></tr>`
+            tableRow: r + `<tr><td class="tbl-label">${label}</td>
+                <td class="tbl-value"${dv ? ' data-check="true"' : ''}><pre>${strValue}</pre></td></tr>`
         }
         
     }
-
 
     // Function to handle the click event and display details
     function showDetails(popupCoords, properties, labelContext) {
@@ -1124,6 +1135,58 @@ const init = async () => {
 
 init()
 
+let lookupLabelCache = {};
+
+function lookup() {
+    //console.log('**********************************')
+    // document.querySelectorAll('.table-lookups [data-check] pre a').forEach(el=>{
+    //     console.log("DATA CHECK", el.getAttribute('href'))
+    // })
+    document.querySelectorAll('.table-lookups [data-lookup],.value-lookups [data-check] pre a').forEach(async (el)=>{
+        let url = el.getAttribute('data-lookup')
+        const done = el.getAttribute('lookup-done')
+        if(done) {
+            return;
+        }
+        el.setAttribute('lookup-done', true)
+        let xx = false
+        if(!url) {
+            url = el.getAttribute('href')
+        }
+        if(!url) {
+            return
+        }
+        if(url in lookupLabelCache) {
+        } else {
+            try {
+                lookupLabelCache[url] = await lookupExternalResource(url, '', acceptableContentTypes);
+            } catch (ex) {
+                if(el.tagName == 'a') {
+                    el.innerHTML = el.innerHTML + '<br/><span>Error </span><i style="position:relative;" class="material-icons" data-tooltip="' + 
+                        ex.message + ' looking up ' + url + '">help_outline</i>';
+                } else {
+                    el.innerHTML = `<a href=${url} class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
+                    <div style="color:black;">Error <i style="position:relative;" class="material-icons" data-tooltip="${ex.message} looking up ${url}">help_outline</i></div>`
+                }
+                M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
+            }
+        }
+        const label = lookupLabelCache[url];
+        if(label && label != '') {
+            console.log("SETTING LABEL ", label, " FROM ", url)
+            console.log(el)
+            if(el.tagName == 'a') {
+                el.classList.add('ext')
+                el.innerHTML = `${label}<i class="material-icons">open_in_new</i>`;
+            } else {
+                el.innerHTML = `<a href=${url} class="ext">${label}<i class="material-icons">open_in_new</i></a>`;
+            }
+        }
+    })
+    //let elems = document.querySelectorAll('[data-tooltip]');
+
+}
+
 function sidebarHide() {
     var el = document.getElementById('sidenav')
     el.classList.add('hide')
@@ -1149,4 +1212,81 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// lookup rdf from external resource, future could support extracting labels, etc by using a sparql query
+async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Accept': acceptableContentTypes.join(', ')
+        },
+        redirect: 'follow'
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+
+      // Check if the received content type partially matches any acceptable content type
+      let foundType = '';
+      const isAccepted = acceptableContentTypes.some(type => {
+        if(contentType.startsWith(type)) {
+            foundType = type;
+            return true;
+        } else {
+            return false;
+        }
+      });
+
+      if (!isAccepted) {
+        throw new Error(`Received unexpected content type: ${contentType}`);
+      } else {
+        console.log("Found type " + foundType)
+      }
+
+      const rdfData = await response.text();
+
+      // Create an RDF store using rdflib.js
+      const store = new $rdf.graph();
+
+      // Parse RDF data with the received content type
+      $rdf.parse(rdfData, store, url, foundType);
+
+    //   const queryObj = $rdf.SPARQLToQuery(sparqlQuery, true, store);
+    //   // Run SPARQL query
+    //   const results = store.query(queryObj);
+    //   console.log("SPARQL result", results) 
+    //     --> the result object is undefined
+
+      const predicates = ['http://www.w3.org/2004/02/skos/core#prefLabel', 'http://purl.org/dc/terms/title', 'https://schema.org/name', 'http://www.w3.org/2000/01/rdf-schema#label'];
+
+      let lbl = '';
+      
+      for(predIdx in predicates) {
+        const pred = predicates[predIdx];
+        if(lbl == '') {
+            const m = store.statementsMatching(undefined, $rdf.sym(pred));
+            if(m && m.length > 0) {
+                lbl = m[0].object.value;
+                break;
+            }
+        }
+      }
+
+      return lbl;
+    
+    //   // Log or process the query results
+    //   console.log('SPARQL Query Results:', results);
+
+    } catch (error) {
+      //console.error('Fetch and run SPARQL error:', error);
+      throw new Error(error);
+    }
+  }
+
+
+// Specify the acceptable content types
+const acceptableContentTypes = ['application/ld+json', 'application/n-triples', 'application/rdf+xml', 'text/turtle'];
+
+  
