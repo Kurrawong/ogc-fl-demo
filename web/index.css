@@ -66,6 +66,11 @@ label {
     padding-left:20px;
 }
 
+td.tbl-value [data-lookup] a.ext .error-msg, td.tbl-value a a.ext .error-msg {
+    display: none;
+}
+
+
 #map {
     flex: 1;
     height: 400px; /* Adjust the height as needed */

@@ -1166,7 +1166,7 @@ function lookup() {
                         ex.message + ' looking up ' + url + '">help_outline</i>';
                 } else {
                     el.innerHTML = `<a href=${url} class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
-                    <div style="color:black;">Error <i style="position:relative;" class="material-icons" data-tooltip="${ex.message} looking up ${url}">help_outline</i></div>`
+                    <div style="color:black;" class="error-msg">Error <i style="position:relative;" class="material-icons" data-tooltip="${ex.message} looking up ${url}">help_outline</i></div>`
                 }
                 M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
             }
