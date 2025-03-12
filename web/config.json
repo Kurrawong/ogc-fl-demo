@@ -45,6 +45,11 @@
     },
     "datasets": [
         {
+            "name": "Observation Collection",
+            "description": "Jellyfish Observations - ILIAD Citizen Science Pilot, using SOSA model.",
+            "uri": "https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish/example_2_1.json"
+        },
+        {
             "name": "VObserv Feature Ex 1.1",
             "description": "OGC Vector Observation Feature",
             "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/examples/vectorObservationFeature/example_1_1.json"
