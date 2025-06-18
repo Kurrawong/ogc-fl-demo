@@ -47,7 +47,7 @@
         {
             "name": "Observation Collection",
             "description": "Jellyfish Observations - ILIAD Citizen Science Pilot, using SOSA model.",
-            "uri": "https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish/example_2_1.jsonld"
+            "uri": "https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish-features/example_2_1.jsonld"
         }
     ]
 }
