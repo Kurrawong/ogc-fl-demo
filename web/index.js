@@ -152,6 +152,24 @@ function dataTooltip(str) {
 
 let tabUID = 0;
 
+// Helper function to properly reinitialize Materialize tabs
+function reinitializeTabs(container) {
+    var tabElements = container.querySelectorAll('.proptabs');
+    if (tabElements.length > 0) {
+        // Destroy existing tab instances first
+        tabElements.forEach(function(tabEl) {
+            var existingInstance = M.Tabs.getInstance(tabEl);
+            if (existingInstance) {
+                existingInstance.destroy();
+            }
+        });
+        // Reinitialize tabs with a small delay to ensure DOM is ready
+        setTimeout(() => {
+            M.Tabs.init(tabElements, {});
+        }, 10);
+    }
+}
+
 function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     let mainstr = '';
     let featureIdx = 0;
@@ -176,7 +194,15 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     jsonData.forEach((row, index)=>{
         featureIdx = index;
         let top = '';
-        let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
+        console.log("*************** ROW", row);
+        let name = '';
+        if ('name' in row['Properties']) {
+            if(typeof(row['Properties']['name']) == 'string') {
+                name = ' (' + row['Properties']['name'] + ')';
+            } else if(row['Properties']['name']?.['label']) {
+                name = ' (' + row['Properties']['name']['label'] + ')';
+            }
+        }
         //console.log(name);
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
@@ -208,11 +234,18 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         top+= header(2);
     
         if(rawContext) {
-            str+= `<div class="tbl-container"><table class="popup-table">`;
-            Object.keys(row['Expanded Properties']).map(key=>{
-                str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
-            })
-            str+= '</table></div>';
+            if (row['Expanded Properties'] && Object.keys(row['Expanded Properties']).length > 0) {
+                str+= `<div class="tbl-container"><table class="popup-table">`;
+                Object.keys(row['Expanded Properties']).map(key=>{
+                    str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
+                })
+                str+= '</table></div>';
+            } else {
+                str+= `<div class="tbl-container"><div class="error-msg">No properties were expanded. This could be due to:<br/>
+                • Missing or invalid @context in the data<br/>
+                • Properties that don't match the context definitions<br/>
+                • JSON-LD expansion errors</div></div>`;
+            }
         } else {
             minWidthCol = cols.length;
         }
@@ -294,7 +327,18 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged) {
     });
 
     var elemsul = container.querySelectorAll('.collapsible');
-    var instances = M.Collapsible.init(elemsul, {});
+    var instances = M.Collapsible.init(elemsul, {
+        onOpenStart: function(el) {
+            // Reinitialize tabs when accordion item opens
+            reinitializeTabs(el);
+        },
+        onOpenEnd: function(el) {
+            // Also reinitialize tabs after accordion animation completes
+            setTimeout(() => {
+                reinitializeTabs(el);
+            }, 50);
+        }
+    });
 
 }
 
@@ -318,7 +362,10 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
 
     lastPopup = popup;
 
-    var instance = M.Tabs.init(contentElement.querySelectorAll('.proptabs'), {});
+    // Initialize tabs after popup content is set
+    setTimeout(() => {
+        var instance = M.Tabs.init(contentElement.querySelectorAll('.proptabs'), {});
+    }, 10);
 
     var popupWidth = popup.getElement().clientWidth
 
@@ -490,30 +537,51 @@ async function start() {
         async function processFeatureProperties(feature) {
             let propertiesExpanded = feature.properties;
             try {
+                console.log("PROCESSING FEATURE:", feature.id || 'unknown', "PROPERTIES:", Object.keys(feature.properties));
+                console.log("MERGED CONTEXT:", mergedContext);
 
-//                console.log("PROCESS", "FP=", feature.properties, "MERGED CTX", mergedContext)
-
-                propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...feature.properties}, {expandContext: mergedContext}));
-//                console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
-                if(propertiesExpanded.length == 0) {
-                    propertiesExpanded = feature.properties;
+                // Only attempt expansion if we have a context
+                if (mergedContext && Object.keys(mergedContext['@context'] || {}).length > 0) {
+                    const expanded = await jsonld.expand({...feature.properties}, {expandContext: mergedContext});
+                    propertiesExpanded = flattenExpandedJsonLd(expanded);
+                    
+                    if (!propertiesExpanded || Object.keys(propertiesExpanded).length === 0) {
+                        propertiesExpanded = feature.properties;
+                    } else {
+                        // Sort properties to maintain order
+                        const keyObj = {};
+                        Object.keys(feature.properties).forEach((key, index)=>{
+                            keyObj[key] = index;
+                        });
+                        
+                        const dummy = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
+                        propertiesExpanded = sortObjectByValues(dummy, propertiesExpanded);
+                        
+                        // Check if we lost any properties and add them back
+                        const originalKeys = Object.keys(feature.properties);
+                        const expandedKeys = Object.keys(propertiesExpanded);
+                        const missingKeys = originalKeys.filter(key => !expandedKeys.includes(key));
+                        if (missingKeys.length > 0) {
+                            // Add missing properties back
+                            missingKeys.forEach(key => {
+                                propertiesExpanded[key] = feature.properties[key];
+                            });
+                        }
+                    }
                 } else {
-                    const keyObj = {};
-                    Object.keys(feature.properties).forEach((key, index)=>{
-                        keyObj[key] = index;
-                    })
-                    dummy = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
-                    propertiesExpanded = sortObjectByValues(dummy, propertiesExpanded);
-//                    console.log("DUMMY", dummy, sortObjectByValues(dummy, propertiesExpanded))
+                    propertiesExpanded = feature.properties;
                 }
-                //console.log(propertiesExpanded);
             } catch (ex) {
-                console.log(ex, feature.properties)
+                console.log("Error during property expansion:", ex);
+                console.log("Using original properties as fallback");
+                propertiesExpanded = feature.properties;
             }
             // console.log("PROPS", feature.properties);
             // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}, 'Lookups': {}};
+            console.log("EXPANDED PROPERTIES FOR FEATURE:", feature.id || 'unknown', propertiesExpanded);
             for(prop in propertiesExpanded) {
+                console.log("ANALYSING PROPERTY:", prop, "VALUE:", propertiesExpanded[prop]);
                 propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, true);
                 propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
                 propInfo['Lookups'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
@@ -830,7 +898,12 @@ async function start() {
                 log.push('URI shortened before outputting label')
                 data.label = '<span data-lookup=' + data.label + '>' + newLabel + '</span>';
             } else {
-                data.label = '<span data-lookup=' + data.label + '>' + data.label + '</span>';
+                // Only set data-lookup if the label is actually a URL
+                if(data.label.match(/^https?:\/\//)) {
+                    data.label = '<span data-lookup=' + data.label + '>' + data.label + '</span>';
+                } else {
+                    data.label = data.label;
+                }
             }
             dv = true
             // if(nestLevel > 0) {
@@ -1156,19 +1229,49 @@ function lookup() {
         if(!url) {
             return
         }
+        
+        console.log("LOOKUP: Processing URL:", url);
+        
         if(url in lookupLabelCache) {
         } else {
             try {
                 lookupLabelCache[url] = await lookupExternalResource(url, '', acceptableContentTypes);
             } catch (ex) {
-                if(el.tagName == 'a') {
-                    el.innerHTML = el.innerHTML + '<br/><span>Error </span><i style="position:relative;" class="material-icons" data-tooltip="' + 
-                        ex.message + ' looking up ' + url + '">help_outline</i>';
-                } else {
-                    el.innerHTML = `<a href=${url} class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
-                    <div style="color:black;" class="error-msg">Error <i style="position:relative;" class="material-icons" data-tooltip="${ex.message} looking up ${url}">help_outline</i></div>`
+                console.log("ERROR HANDLING: Caught error for URL:", url, "Error:", ex.message);
+                // Store the error in cache so we don't retry
+                lookupLabelCache[url] = null;
+                
+                // Determine error code and message
+                let errorCode = 'UNKNOWN';
+                let errorMessage = ex.message;
+                
+                if (ex.type === 'HTTP_ERROR') {
+                    errorCode = ex.status.toString();
+                } else if (ex.type === 'CONTENT_TYPE_ERROR') {
+                    errorCode = 'CONTENT_TYPE';
+                } else if (ex.type === 'TIMEOUT_ERROR') {
+                    errorCode = 'TIMEOUT';
+                } else if (ex.type === 'NETWORK_ERROR') {
+                    errorCode = 'NETWORK';
+                } else if (ex.type === 'UNKNOWN_ERROR') {
+                    errorCode = 'UNKNOWN';
                 }
-                M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
+                
+                // Only show error indicators for actual external URLs
+                if (url.startsWith('http')) {
+                    const tooltipText = `${errorMessage}\nURL: ${url}`;
+                    console.log("ADDING ERROR ICON for URL:", url, "Error code:", errorCode);
+                    if(el.tagName == 'a') {
+                        // Add error icon to existing link
+                        el.innerHTML = el.innerHTML + `<i class="material-icons error-icon" data-error-code="${errorCode}" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}">error</i>`;
+                    } else {
+                        // Create link with error icon
+                        el.innerHTML = `<a href="${url}" class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
+                        <i class="material-icons error-icon" data-error-code="${errorCode}" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}">error</i>`;
+                    }
+                    console.log("ERROR ICON ADDED, element HTML:", el.innerHTML);
+                    M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
+                }
             }
         }
         const label = lookupLabelCache[url];
@@ -1215,15 +1318,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // lookup rdf from external resource, future could support extracting labels, etc by using a sparql query
 async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) {
     try {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch(url, {
         headers: {
           'Accept': acceptableContentTypes.join(', ')
         },
-        redirect: 'follow'
+        redirect: 'follow',
+        mode: 'cors', // Explicitly set CORS mode
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const error = new Error(`HTTP error! Status: ${response.status} - ${url}`);
+        error.status = response.status;
+        error.type = 'HTTP_ERROR';
+        throw error;
       }
 
       const contentType = response.headers.get('content-type');
@@ -1231,7 +1345,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       // Check if the received content type partially matches any acceptable content type
       let foundType = '';
       const isAccepted = acceptableContentTypes.some(type => {
-        if(contentType.startsWith(type)) {
+        if(contentType && contentType.startsWith(type)) {
             foundType = type;
             return true;
         } else {
@@ -1240,7 +1354,9 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       });
 
       if (!isAccepted) {
-        throw new Error(`Received unexpected content type: ${contentType}`);
+        const error = new Error(`Received unexpected content type: ${contentType || 'unknown'} - ${url}`);
+        error.type = 'CONTENT_TYPE_ERROR';
+        throw error;
       } else {
         console.log("Found type " + foundType)
       }
@@ -1252,12 +1368,6 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
 
       // Parse RDF data with the received content type
       $rdf.parse(rdfData, store, url, foundType);
-
-    //   const queryObj = $rdf.SPARQLToQuery(sparqlQuery, true, store);
-    //   // Run SPARQL query
-    //   const results = store.query(queryObj);
-    //   console.log("SPARQL result", results) 
-    //     --> the result object is undefined
 
       const predicates = ['http://www.w3.org/2004/02/skos/core#prefLabel', 'http://purl.org/dc/terms/title', 'https://schema.org/name', 'http://www.w3.org/2000/01/rdf-schema#label'];
 
@@ -1275,13 +1385,28 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       }
 
       return lbl;
-    
-    //   // Log or process the query results
-    //   console.log('SPARQL Query Results:', results);
 
     } catch (error) {
-      //console.error('Fetch and run SPARQL error:', error);
-      throw new Error(error);
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error(`Request timeout - ${url} took too long to respond`);
+        timeoutError.type = 'TIMEOUT_ERROR';
+        throw timeoutError;
+      }
+      // Handle network errors (including CORS)
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        const networkError = new Error(`Network error - Unable to fetch (may be CORS restricted)`);
+        networkError.type = 'NETWORK_ERROR';
+        throw networkError;
+      }
+      // Re-throw other errors with more context, preserving their type
+      if (error.type) {
+        throw error;
+      } else {
+        const genericError = new Error(`${error.message} - ${url}`);
+        genericError.type = 'UNKNOWN_ERROR';
+        throw genericError;
+      }
     }
   }
 
