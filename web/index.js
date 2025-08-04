@@ -135,7 +135,8 @@ function flattenExpandedJsonLd(expanded) {
       }
       return properties;
     });
-    return flattened.length === 1 ? flattened[0] : flattened;
+    const result = flattened.length === 1 ? flattened[0] : flattened;
+    return result;
 }
 
 function outputValSimple(val) {
@@ -542,20 +543,89 @@ async function start() {
 
                 // Only attempt expansion if we have a context
                 if (mergedContext && Object.keys(mergedContext['@context'] || {}).length > 0) {
+                    // Only log for features with monumentedBy to reduce noise
+                    if (feature.properties.monumentedBy) {
+                        console.log("MEXP: Feature with monumentedBy - ID:", feature.id);
+                        console.log("MEXP: monumentedBy value:", JSON.stringify(feature.properties.monumentedBy));
+                    }
+                    
                     const expanded = await jsonld.expand({...feature.properties}, {expandContext: mergedContext});
+                    
+                    // Only log expansion result for features with monumentedBy
+                    if (feature.properties.monumentedBy) {
+                        console.log("MEXP: Raw expanded result for monumentedBy:", JSON.stringify(expanded));
+                    }
+                    
                     propertiesExpanded = flattenExpandedJsonLd(expanded);
+                    
+                    // Only log flattened result for features with monumentedBy
+                    if (feature.properties.monumentedBy) {
+                        console.log("MEXP: Flattened result for monumentedBy:", JSON.stringify(propertiesExpanded.monumentedBy || propertiesExpanded['surv:monumentedBy']));
+                    }
                     
                     if (!propertiesExpanded || Object.keys(propertiesExpanded).length === 0) {
                         propertiesExpanded = feature.properties;
                     } else {
-                        // Sort properties to maintain order
+                        // Start with all original properties to ensure we don't lose any
+                        propertiesExpanded = {...feature.properties, ...propertiesExpanded};
+                        // Create a mapping that includes both compact and expanded forms for ordering
                         const keyObj = {};
                         Object.keys(feature.properties).forEach((key, index)=>{
                             keyObj[key] = index;
                         });
                         
-                        const dummy = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
-                        propertiesExpanded = sortObjectByValues(dummy, propertiesExpanded);
+                        console.log("EXP: Original properties order:", JSON.stringify(Object.keys(feature.properties)));
+                        console.log("EXP: Key mapping object:", JSON.stringify(keyObj));
+                        
+                        // Expand the key mapping to see what compact keys map to what expanded keys
+                        const expandedKeyMapping = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
+                        console.log("EXP: Expanded key mapping:", JSON.stringify(expandedKeyMapping));
+                        
+                        // Create a comprehensive ordering map that includes both compact and expanded forms
+                        const orderingMap = {};
+                        
+                        // First, map expanded keys to their original positions
+                        Object.keys(expandedKeyMapping).forEach(expandedKey => {
+                            const originalKey = Object.keys(feature.properties).find(key => {
+                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
+                                return expandedSuffix === key;
+                            });
+                            if (originalKey) {
+                                orderingMap[expandedKey] = Object.keys(feature.properties).indexOf(originalKey);
+                                console.log(`EXP: Mapped ${expandedKey} to position ${Object.keys(feature.properties).indexOf(originalKey)} (from ${originalKey})`);
+                            } else {
+                                // Handle cases where the expanded key doesn't match any original key by suffix
+                                // This can happen when properties expand to completely different names
+                                // Try to find a match by checking if the expanded key was created from any original key
+                                const matchingOriginalKey = Object.keys(feature.properties).find(key => {
+                                    // Check if this original key was expanded to this expanded key
+                                    return expandedKeyMapping[expandedKey] && expandedKeyMapping[expandedKey].includes(Object.keys(feature.properties).indexOf(key));
+                                });
+                                if (matchingOriginalKey) {
+                                    orderingMap[expandedKey] = Object.keys(feature.properties).indexOf(matchingOriginalKey);
+                                    console.log(`EXP: Mapped ${expandedKey} to position ${Object.keys(feature.properties).indexOf(matchingOriginalKey)} (from ${matchingOriginalKey} via expansion)`);
+                                }
+                            }
+                        });
+                        
+                        // Also add any compact keys that didn't expand
+                        Object.keys(feature.properties).forEach((key, index) => {
+                            if (!Object.keys(orderingMap).some(expandedKey => {
+                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
+                                return expandedSuffix === key;
+                            })) {
+                                orderingMap[key] = index;
+                                console.log(`EXP: Mapped ${key} to position ${index} (didn't expand)`);
+                            }
+                        });
+                        
+                        console.log("EXP: Final ordering map:", JSON.stringify(orderingMap));
+                        console.log("EXP: Properties before sorting:", JSON.stringify(Object.keys(propertiesExpanded)));
+                        
+                        // Sort the expanded properties using the comprehensive ordering map
+                        propertiesExpanded = sortObjectByValues(orderingMap, propertiesExpanded);
+                        
+                        console.log("EXP: Properties after sorting:", JSON.stringify(Object.keys(propertiesExpanded)));
                         
                         // Check if we lost any properties and add them back
                         const originalKeys = Object.keys(feature.properties);
@@ -567,6 +637,28 @@ async function start() {
                                 propertiesExpanded[key] = feature.properties[key];
                             });
                         }
+                        
+                        // Remove duplicate properties where both compact and expanded forms exist
+                        // This happens when JSON-LD expansion creates both forms
+                        const keysToRemove = [];
+                        for (const expandedKey of expandedKeys) {
+                            // Check if this expanded key has a corresponding compact form
+                            for (const originalKey of originalKeys) {
+                                // If the expanded key contains the original key as a suffix (after the last slash or #)
+                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
+                                if (expandedSuffix === originalKey && expandedKey !== originalKey) {
+                                    // Keep the expanded form, mark the compact form for removal
+                                    if (propertiesExpanded[originalKey] && propertiesExpanded[expandedKey]) {
+                                        keysToRemove.push(originalKey);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Remove the duplicate compact forms
+                        keysToRemove.forEach(key => {
+                            delete propertiesExpanded[key];
+                        });
                     }
                 } else {
                     propertiesExpanded = feature.properties;
@@ -602,6 +694,7 @@ async function start() {
             onEachFeature: async function(feature, layer) {
 
                 console.log("FEATURE FOUND", feature);
+                console.log("Geometry type:", feature.geometry.type);
                 var geometryType = feature.geometry.type;
                 var coordinates = feature.geometry.coordinates;
                 var popupCoords = undefined
@@ -609,17 +702,32 @@ async function start() {
                 if(geometryType == 'Point') {
                     updateBoundingBox(coordinates[1], coordinates[0]);
                     popupCoords = {lat: coordinates[1], lng: coordinates[0]};
-                } else {
+                } else if(geometryType == 'LineString') {
                     const bounds = layer.getBounds();
                     popupCoords = bounds.getCenter();
 
-                    if(geometryType == 'LineString' && bounds.getNorth() == bounds.getSouth() && bounds.getWest() == bounds.getEast()) {
+                    if(bounds.getNorth() == bounds.getSouth() && bounds.getWest() == bounds.getEast()) {
                         updateBoundingBox(bounds.getNorth(), bounds.getWest());
                     } else {
                         // Update the bounding box with the bounds of the layer
                         updateBoundingBox(bounds.getNorth(), bounds.getWest());
                         updateBoundingBox(bounds.getSouth(), bounds.getEast());
                     }
+                } else if(geometryType == 'Polygon') {
+                    const bounds = layer.getBounds();
+                    popupCoords = bounds.getCenter();
+                    
+                    // Update the bounding box with the bounds of the layer
+                    updateBoundingBox(bounds.getNorth(), bounds.getWest());
+                    updateBoundingBox(bounds.getSouth(), bounds.getEast());
+                } else {
+                    // Handle any other geometry types
+                    const bounds = layer.getBounds();
+                    popupCoords = bounds.getCenter();
+                    
+                    // Update the bounding box with the bounds of the layer
+                    updateBoundingBox(bounds.getNorth(), bounds.getWest());
+                    updateBoundingBox(bounds.getSouth(), bounds.getEast());
                 }
                 if('name' in feature.properties && 'iri' in feature.properties) {
                     iriRefs[feature.properties.iri] = feature.properties.name;
