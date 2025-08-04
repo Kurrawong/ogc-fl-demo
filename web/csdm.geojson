@@ -1,5 +1,5 @@
 {
-    "@context": "/context.jsonld",
+    "@context": "context.jsonld",
     "$schema": "schema.json",
     "type": "FeatureCollection",
     "coordRefSys": "epsg:8024",
