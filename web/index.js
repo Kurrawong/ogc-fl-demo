@@ -27,6 +27,27 @@ let iriRefs = {};
 let iriLayers = {};
 let configData = {};
 
+// Fetch configuration options
+const fetchConfig = {
+    redirect: 'follow', // Follow 302 redirections
+    mode: 'cors',
+    credentials: 'same-origin'
+};
+
+const fetchCache = new Map();
+
+function cachedFetch(url, options) {
+    if (!fetchCache.has(url)) {
+        // Store the promise immediately.
+        // It will be a promise that resolves to a Response, or a rejected promise for network errors.
+        fetchCache.set(url, fetch(url, options));
+    }
+    // Return a promise that resolves to a CLONED response.
+    // This handles both cache hits and misses.
+    // If the cached promise is a rejection, .then is skipped and the rejection propagates.
+    return fetchCache.get(url).then(response => response.clone());
+}
+
 function capitalizeFirstChar(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -40,7 +61,7 @@ function getAbsoluteURL(relativePath) {
 async function getContextPrefixes(contextUrl) {
     try {
       // Fetch the context document
-      const response = await fetch(contextUrl);
+      const response = await cachedFetch(contextUrl, fetchConfig);
       const contextDocument = await response.text();
   
       // Parse the context document
@@ -66,7 +87,7 @@ async function resolveContext(...contextDefinitions) {
       // Handle complex context definition that contains both a URL and an inline object
       const [contextUrl, inlineContext] = contextDef;
       if (typeof contextUrl === 'string') {
-        const response = await fetch(contextUrl);
+        const response = await cachedFetch(contextUrl, fetchConfig);
         if (!response.ok) {
           throw new Error(`Failed to fetch context from ${contextUrl}`);
         }
@@ -79,7 +100,7 @@ async function resolveContext(...contextDefinitions) {
     } else if (typeof contextDef === 'string') {
       // If the context definition is a URL, fetch and merge it
       const contextUrl = contextDef;
-      const response = await fetch(contextUrl);
+      const response = await cachedFetch(contextUrl, fetchConfig);
       if (!response.ok) {
         throw new Error(`Failed to fetch context from ${contextUrl}`);
       }
@@ -104,7 +125,7 @@ async function mergeContexts(contextUrls, contextData={}) {
     }
     try {
       const contextResponses = await Promise.all(
-        contextUrls.map(url => fetch(url).then(response => response.json()))
+        contextUrls.map(url => cachedFetch(url, fetchConfig).then(response => response.json()))
       );
   
       const mergedContext = {
@@ -152,6 +173,78 @@ function dataTooltip(str) {
 }
 
 let tabUID = 0;
+
+// Analyze nested contexts and create property-to-context mappings
+function analyzeNestedContexts(context) {
+    const contextMappings = {};
+    const nestedContexts = {};
+    
+    // Scan the context for nested @context objects
+    for (const [key, value] of Object.entries(context)) {
+        if (value && typeof value === 'object' && '@context' in value) {
+            nestedContexts[key] = value;
+            // Map all properties in this nested context to the parent key
+            const nestedContext = value['@context'];
+            for (const nestedKey in nestedContext) {
+                contextMappings[nestedKey] = key;
+            }
+        }
+    }
+    
+    return { contextMappings, nestedContexts };
+}
+
+// Wrap properties by their appropriate nested context
+function wrapPropertiesByContext(properties, contextMappings) {
+    const wrapped = {};
+    const topLevelProps = {};
+    
+    // Separate properties by their context
+    for (const [key, value] of Object.entries(properties)) {
+        if (contextMappings[key]) {
+            // This property belongs to a nested context
+            const contextKey = contextMappings[key];
+            if (!wrapped[contextKey]) {
+                wrapped[contextKey] = {};
+            }
+            wrapped[contextKey][key] = value;
+        } else {
+            // This property belongs to top-level context
+            topLevelProps[key] = value;
+        }
+    }
+    
+    // Merge top-level properties with wrapped properties
+    return { ...topLevelProps, ...wrapped };
+}
+
+// Extract properties from all nested contexts in expanded result
+function extractFromAllContexts(expanded, contextMappings, nestedContexts) {
+    const flattened = flattenExpandedJsonLd(expanded);
+    const result = {};
+    
+    // Extract from top-level properties
+    for (const [key, value] of Object.entries(flattened)) {
+        // Check if this key corresponds to a nested context
+        const isNestedContext = Object.values(nestedContexts).some(context => {
+            const contextId = context['@id'];
+            return contextId && key.includes(contextId.replace('container:', ''));
+        });
+        
+        if (!isNestedContext) {
+            result[key] = value;
+        } else {
+            // This is a nested context, extract its properties
+            const nestedData = value;
+            const properties = Array.isArray(nestedData) ? nestedData[0] : nestedData;
+            if (properties && typeof properties === 'object') {
+                Object.assign(result, properties);
+            }
+        }
+    }
+    
+    return result;
+}
 
 // Helper function to properly reinitialize Materialize tabs
 function reinitializeTabs(container) {
@@ -503,7 +596,7 @@ async function start() {
     //console.log("XCONTENT", mergedContext);
 
     // Load the GeoJSON data
-    fetch(sourceUrl)
+    cachedFetch(sourceUrl, fetchConfig)
     .then(function(response) {
         return response.json();
     })
@@ -538,253 +631,121 @@ async function start() {
         async function processFeatureProperties(feature) {
             let propertiesExpanded = feature.properties;
             try {
-                console.log("PROCESSING FEATURE:", feature.id || 'unknown', "PROPERTIES:", Object.keys(feature.properties));
-                console.log("MERGED CONTEXT:", mergedContext);
-
-                // Only attempt expansion if we have a context
                 if (mergedContext && Object.keys(mergedContext['@context'] || {}).length > 0) {
-                    // Only log for features with monumentedBy to reduce noise
-                    if (feature.properties.monumentedBy) {
-                        console.log("MEXP: Feature with monumentedBy - ID:", feature.id);
-                        console.log("MEXP: monumentedBy value:", JSON.stringify(feature.properties.monumentedBy));
-                    }
+                    const { contextMappings, nestedContexts } = analyzeNestedContexts(mergedContext['@context']);
                     
-                    const expanded = await jsonld.expand({...feature.properties}, {expandContext: mergedContext});
-                    
-                    // Only log expansion result for features with monumentedBy
-                    if (feature.properties.monumentedBy) {
-                        console.log("MEXP: Raw expanded result for monumentedBy:", JSON.stringify(expanded));
-                    }
-                    
-                    propertiesExpanded = flattenExpandedJsonLd(expanded);
-                    
-                    // Only log flattened result for features with monumentedBy
-                    if (feature.properties.monumentedBy) {
-                        console.log("MEXP: Flattened result for monumentedBy:", JSON.stringify(propertiesExpanded.monumentedBy || propertiesExpanded['surv:monumentedBy']));
-                    }
-                    
-                    if (!propertiesExpanded || Object.keys(propertiesExpanded).length === 0) {
-                        propertiesExpanded = feature.properties;
-                    } else {
-                        // Start with all original properties to ensure we don't lose any
-                        propertiesExpanded = {...feature.properties, ...propertiesExpanded};
-                        // Create a mapping that includes both compact and expanded forms for ordering
-                        const keyObj = {};
-                        Object.keys(feature.properties).forEach((key, index)=>{
-                            keyObj[key] = index;
-                        });
-                        
-                        console.log("EXP: Original properties order:", JSON.stringify(Object.keys(feature.properties)));
-                        console.log("EXP: Key mapping object:", JSON.stringify(keyObj));
-                        
-                        // Expand the key mapping to see what compact keys map to what expanded keys
-                        const expandedKeyMapping = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
-                        console.log("EXP: Expanded key mapping:", JSON.stringify(expandedKeyMapping));
-                        
-                        // Create a comprehensive ordering map that includes both compact and expanded forms
-                        const orderingMap = {};
-                        
-                        // First, map expanded keys to their original positions
-                        Object.keys(expandedKeyMapping).forEach(expandedKey => {
-                            const originalKey = Object.keys(feature.properties).find(key => {
-                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
-                                return expandedSuffix === key;
-                            });
-                            if (originalKey) {
-                                orderingMap[expandedKey] = Object.keys(feature.properties).indexOf(originalKey);
-                                console.log(`EXP: Mapped ${expandedKey} to position ${Object.keys(feature.properties).indexOf(originalKey)} (from ${originalKey})`);
-                            } else {
-                                // Handle cases where the expanded key doesn't match any original key by suffix
-                                // This can happen when properties expand to completely different names
-                                // Try to find a match by checking if the expanded key was created from any original key
-                                const matchingOriginalKey = Object.keys(feature.properties).find(key => {
-                                    // Check if this original key was expanded to this expanded key
-                                    return expandedKeyMapping[expandedKey] && expandedKeyMapping[expandedKey].includes(Object.keys(feature.properties).indexOf(key));
-                                });
-                                if (matchingOriginalKey) {
-                                    orderingMap[expandedKey] = Object.keys(feature.properties).indexOf(matchingOriginalKey);
-                                    console.log(`EXP: Mapped ${expandedKey} to position ${Object.keys(feature.properties).indexOf(matchingOriginalKey)} (from ${matchingOriginalKey} via expansion)`);
-                                }
-                            }
-                        });
-                        
-                        // Also add any compact keys that didn't expand
-                        Object.keys(feature.properties).forEach((key, index) => {
-                            if (!Object.keys(orderingMap).some(expandedKey => {
-                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
-                                return expandedSuffix === key;
-                            })) {
-                                orderingMap[key] = index;
-                                console.log(`EXP: Mapped ${key} to position ${index} (didn't expand)`);
-                            }
-                        });
-                        
-                        console.log("EXP: Final ordering map:", JSON.stringify(orderingMap));
-                        console.log("EXP: Properties before sorting:", JSON.stringify(Object.keys(propertiesExpanded)));
-                        
-                        // Sort the expanded properties using the comprehensive ordering map
-                        propertiesExpanded = sortObjectByValues(orderingMap, propertiesExpanded);
-                        
-                        console.log("EXP: Properties after sorting:", JSON.stringify(Object.keys(propertiesExpanded)));
-                        
-                        // Check if we lost any properties and add them back
-                        const originalKeys = Object.keys(feature.properties);
-                        const expandedKeys = Object.keys(propertiesExpanded);
-                        const missingKeys = originalKeys.filter(key => !expandedKeys.includes(key));
-                        if (missingKeys.length > 0) {
-                            // Add missing properties back
-                            missingKeys.forEach(key => {
-                                propertiesExpanded[key] = feature.properties[key];
-                            });
+                    const propertyMapping = {};
+                    for (const propName of Object.keys(feature.properties)) {
+                        try {
+                            const singlePropObj = { [propName]: feature.properties[propName] };
+                            const wrappedSingleProp = wrapPropertiesByContext(singlePropObj, contextMappings);
+                            const singleExpanded = await jsonld.expand(wrappedSingleProp, {expandContext: mergedContext});
+                            const extractedSingleProp = extractFromAllContexts(singleExpanded, contextMappings, nestedContexts);
+                            
+                            const expandedKeys = Object.keys(extractedSingleProp);
+                            propertyMapping[propName] = expandedKeys.length > 0 ? expandedKeys[0] : propName;
+                        } catch (error) {
+                            console.error(`Error individually expanding "${propName}":`, error);
+                            propertyMapping[propName] = propName;
                         }
-                        
-                        // Remove duplicate properties where both compact and expanded forms exist
-                        // This happens when JSON-LD expansion creates both forms
-                        const keysToRemove = [];
-                        for (const expandedKey of expandedKeys) {
-                            // Check if this expanded key has a corresponding compact form
-                            for (const originalKey of originalKeys) {
-                                // If the expanded key contains the original key as a suffix (after the last slash or #)
-                                const expandedSuffix = expandedKey.split(/[\/#]/).pop();
-                                if (expandedSuffix === originalKey && expandedKey !== originalKey) {
-                                    // Keep the expanded form, mark the compact form for removal
-                                    if (propertiesExpanded[originalKey] && propertiesExpanded[expandedKey]) {
-                                        keysToRemove.push(originalKey);
-                                    }
-                                }
+                    }
+                    
+                    const wrappedProperties = wrapPropertiesByContext(feature.properties, contextMappings);
+                    const expanded = await jsonld.expand(wrappedProperties, {expandContext: mergedContext});
+                    const mainExpandedProps = extractFromAllContexts(expanded, contextMappings, nestedContexts);
+
+                    if (mainExpandedProps && Object.keys(mainExpandedProps).length > 0) {
+                        const finalProperties = {};
+                        for (const originalKey of Object.keys(feature.properties)) {
+                            const expandedKey = propertyMapping[originalKey] || originalKey;
+                            if (mainExpandedProps.hasOwnProperty(expandedKey)) {
+                                finalProperties[expandedKey] = mainExpandedProps[expandedKey];
+                            } else if (feature.properties.hasOwnProperty(originalKey)) {
+                                finalProperties[originalKey] = feature.properties[originalKey];
                             }
                         }
-                        
-                        // Remove the duplicate compact forms
-                        keysToRemove.forEach(key => {
-                            delete propertiesExpanded[key];
-                        });
+                        propertiesExpanded = finalProperties;
                     }
-                } else {
-                    propertiesExpanded = feature.properties;
                 }
-            } catch (ex) {
-                console.log("Error during property expansion:", ex);
-                console.log("Using original properties as fallback");
-                propertiesExpanded = feature.properties;
+            } catch (err) {
+                console.error('Error expanding feature properties:', err);
             }
-            // console.log("PROPS", feature.properties);
-            // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
+
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}, 'Lookups': {}};
-            console.log("EXPANDED PROPERTIES FOR FEATURE:", feature.id || 'unknown', propertiesExpanded);
-            for(prop in propertiesExpanded) {
-                console.log("ANALYSING PROPERTY:", prop, "VALUE:", propertiesExpanded[prop]);
+            for(const prop in propertiesExpanded) {
                 propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, true);
                 propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
                 propInfo['Lookups'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
             }
 
-            propTable.push({
+            return {
                 "Properties": feature.properties,
                 "Expanded Properties": propertiesExpanded,
                 ...propInfo
-            });
-            return propertiesExpanded
+            };
         }
 
-        console.log('FEATURE DATA', data);
-        let fIdx = 0;
-        // Create a Leaflet GeoJSON layer and add it to the map
-        geojsonLayer = L.geoJSON(data, {
-            onEachFeature: async function(feature, layer) {
+        // --- Data Processing and UI Rendering ---
 
-                console.log("FEATURE FOUND", feature);
-                console.log("Geometry type:", feature.geometry.type);
-                var geometryType = feature.geometry.type;
-                var coordinates = feature.geometry.coordinates;
-                var popupCoords = undefined
-              
-                if(geometryType == 'Point') {
+        // 1. Process all features first to avoid race conditions
+        if (data && data.type === 'Feature') { // Handle single feature case
+            data = {type: 'FeatureCollection', features: [data]};
+        }
+
+        if (data && data.features) {
+            const processingPromises = data.features.map(feature => processFeatureProperties(feature));
+            propTable = await Promise.all(processingPromises);
+        } else {
+            propTable = [];
+        }
+
+        // 2. Create the main table view now that all data is processed
+        createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
+
+        // 3. Create the GeoJSON layer with synchronous feature handling
+        let featureIndex = 0;
+        geojsonLayer = L.geoJSON(data, {
+            onEachFeature: function(feature, layer) {
+                const geometryType = feature.geometry.type;
+                const coordinates = feature.geometry.coordinates;
+                let popupCoords;
+
+                if (geometryType === 'Point') {
                     updateBoundingBox(coordinates[1], coordinates[0]);
                     popupCoords = {lat: coordinates[1], lng: coordinates[0]};
-                } else if(geometryType == 'LineString') {
+                } else if (layer.getBounds) {
                     const bounds = layer.getBounds();
                     popupCoords = bounds.getCenter();
-
-                    if(bounds.getNorth() == bounds.getSouth() && bounds.getWest() == bounds.getEast()) {
-                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                    } else {
-                        // Update the bounding box with the bounds of the layer
-                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                        updateBoundingBox(bounds.getSouth(), bounds.getEast());
-                    }
-                } else if(geometryType == 'Polygon') {
-                    const bounds = layer.getBounds();
-                    popupCoords = bounds.getCenter();
-                    
-                    // Update the bounding box with the bounds of the layer
-                    updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                    updateBoundingBox(bounds.getSouth(), bounds.getEast());
-                } else {
-                    // Handle any other geometry types
-                    const bounds = layer.getBounds();
-                    popupCoords = bounds.getCenter();
-                    
-                    // Update the bounding box with the bounds of the layer
                     updateBoundingBox(bounds.getNorth(), bounds.getWest());
                     updateBoundingBox(bounds.getSouth(), bounds.getEast());
                 }
-                if('name' in feature.properties && 'iri' in feature.properties) {
+
+                if (feature.properties && feature.properties.iri && feature.properties.name) {
                     iriRefs[feature.properties.iri] = feature.properties.name;
                     iriLayers[feature.properties.iri] = layer;
                 }
-                const propertiesExpanded = await processFeatureProperties(feature);
-                const lastFeature = [propTable[fIdx]];
+                
+                const featureData = propTable[featureIndex];
 
                 layer.on('click', function() {
-                    // Function to handle click event
+                    if (featureData) {
+                        createPopupFromJson(popupCoords, [featureData], rawContext, mergedContext, feature.properties);
+                    } else {
+                        console.error("No processed data found for feature index:", featureIndex);
+                    }
 
-                    console.log("1. SHOWING DETAILS FOR", feature.properties);
-                    console.log("2. EXPANDED DETAILS", propertiesExpanded);
-
-//                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
-                    createPopupFromJson(popupCoords, lastFeature, rawContext, mergedContext, feature.properties);
-
-
-                    if(layer.setStyle) {
-                        if(lastLayer) {
+                    if (layer.setStyle) {
+                        if (lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
                         }
-                        lastLayerColor = layer.getElement().getAttribute('stroke')
-                        layer.setStyle({ color: 'red' }); // Change the color to red or any desired color
+                        lastLayerColor = layer.getElement() ? layer.getElement().getAttribute('stroke') : undefined;
+                        layer.setStyle({ color: 'red' });
                         lastLayer = layer;
                     }
                 });
-                fIdx++;
-
+                featureIndex++;
             }
         }).addTo(map);
-
-//        console.log("PROPERTIES", propTable);
-        // no properties found
-        setTimeout(()=>{
-            if(propTable.length == 0) {
-                // manual process of features...
-                if(data.type == 'Feature') {
-                    data = {type: 'FeatureCollection', features: [data]};
-                }
-                if(data.type == 'FeatureCollection' && data.features) {
-                    data.features.forEach(async feature=>{
-                        const propertiesExpanded = await processFeatureProperties(feature)
-                    })
-                }
-            }
-        }, 50);
-
-
-        setTimeout(()=>{
-            document.getElementById('info').innerHTML = '';
-            createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
-//            setTimeout(()=>{
-//                document.getElementById('info').innerHTML = JSON.stringify(propTable);
-//                lookup();
-//            }, 150);
-        }, 100);
 
         map.on("click", function(event) {
             var id = event.originalEvent.target.id;
@@ -1190,7 +1151,7 @@ async function mergeJsonLdData(jsonDataArray) {
 
 async function mergeJsonFromUrls(urls) {
     const mergedData = await Promise.all(
-      urls.map(url => fetch(url).then(response => response.json()))
+      urls.map(url => cachedFetch(url, fetchConfig).then(response => response.json()))
     ).then(jsonDataArray =>
       jsonDataArray.reduce((merged, json) => ({ ...merged, ...json }), {})
     );
@@ -1213,7 +1174,7 @@ const init = async () => {
 
         const urlParams = new URLSearchParams(window.location.search);
         const configParam = urlParams.get('config');
-        const response = await fetch(configParam ? configParam : './config.json');
+        const response = await cachedFetch(configParam ? configParam : './config.json', fetchConfig);
         configData = await response.json();
         configJson = configData;
         let elems = document.querySelectorAll('[data-tooltip]');
@@ -1430,12 +1391,11 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await fetch(url, {
+      const response = await cachedFetch(url, {
+        ...fetchConfig,
         headers: {
           'Accept': acceptableContentTypes.join(', ')
         },
-        redirect: 'follow',
-        mode: 'cors', // Explicitly set CORS mode
         signal: controller.signal
       });
       
