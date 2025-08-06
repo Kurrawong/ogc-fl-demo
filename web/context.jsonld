@@ -1497,7 +1497,7 @@
       "dct": "http://purl.org/dc/terms/",
       "commonpatterns": "csdm:commonpatterns/",
       "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-      "csdm": "https://linked.data.gov.au/def/csdm/",
+      "csdm": "https://icsm-api.qlocation.information.qld.gov.au/object?uri=https%3A%2F%2Flinked.data.gov.au%2Fdef%2Fcsdm%2F",
       "oa": "http://www.w3.org/ns/oa#",
       "prof": "http://www.w3.org/ns/dx/prof/",
       "geojson": "https://purl.org/geojson/vocab#",

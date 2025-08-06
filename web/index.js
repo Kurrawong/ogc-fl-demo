@@ -1390,7 +1390,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       // Create an AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+
       const response = await cachedFetch(url, {
         ...fetchConfig,
         headers: {
@@ -1422,7 +1422,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       });
 
       if (!isAccepted) {
-        const error = new Error(`Received unexpected content type: ${contentType || 'unknown'} - ${url}`);
+        const error = new Error(`Received unexpected content type: ${contentType || 'unknown'} - ${url}, check the resource exists`);
         error.type = 'CONTENT_TYPE_ERROR';
         throw error;
       } else {
@@ -1430,6 +1430,8 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       }
 
       const rdfData = await response.text();
+
+      console.log("RDF: DATA", url, rdfData);
 
       // Create an RDF store using rdflib.js
       const store = new $rdf.graph();
@@ -1480,6 +1482,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
 
 
 // Specify the acceptable content types
-const acceptableContentTypes = ['application/ld+json', 'application/n-triples', 'application/rdf+xml', 'text/turtle'];
-
+const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'application/rdf+xml'];
+//'application/ld+json'
+//'text/anot+turtle'
   
