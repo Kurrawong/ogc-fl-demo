@@ -45,8 +45,13 @@
     },
     "datasets": [
         {
+            "name": "Observation - Geopose",
+            "description": "BBlocks Examples - the context document has been constructed using a combination of Features, Observations and GeoPose",
+            "uri": "https://ogcincubator.github.io/bblocks-examples/build/tests/bbr/examples/observation/vectorObservationFeature/example_1_1.jsonld"
+        },
+         {
             "name": "Observation Collection",
-            "description": "Jellyfish Observations - ILIAD Citizen Science Pilot, using SOSA model.",
+            "description": "Jellyfish Observations using SOSA model.",
             "uri": "https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish-features/example_2_1.jsonld"
         }
     ]
