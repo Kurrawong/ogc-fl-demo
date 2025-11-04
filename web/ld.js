@@ -1,4 +1,11 @@
 
+// Fetch configuration options
+const fetchConfig = {
+    redirect: 'follow', // Follow 302 redirections
+    mode: 'cors',
+    credentials: 'same-origin'
+};
+
 async function resolveContext(...contextDefinitions) {
   const resolvedContext = {};
 
@@ -8,7 +15,7 @@ async function resolveContext(...contextDefinitions) {
       // Handle complex context definition that contains both a URL and an inline object
       const [contextUrl, inlineContext] = contextDef;
       if (typeof contextUrl === 'string') {
-        const response = await fetch(contextUrl);
+        const response = await fetch(contextUrl, fetchConfig);
         if (!response.ok) {
           throw new Error(`Failed to fetch context from ${contextUrl}`);
         }
@@ -21,7 +28,7 @@ async function resolveContext(...contextDefinitions) {
     } else if (typeof contextDef === 'string') {
       // If the context definition is a URL, fetch and merge it
       const contextUrl = contextDef;
-      const response = await fetch(contextUrl);
+      const response = await fetch(contextUrl, fetchConfig);
       if (!response.ok) {
         throw new Error(`Failed to fetch context from ${contextUrl}`);
       }
@@ -98,7 +105,7 @@ async function init(fileParam) {
 
   const urlParams = new URLSearchParams(window.location.search);
   // const fileParam = urlParams.get('file');
-  const response = await fetch(fileParam); 
+  const response = await fetch(fileParam, fetchConfig); 
   let data = await response.json();
   const log = {};
   log['Original'] = data;

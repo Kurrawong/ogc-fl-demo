@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fetch Original URL Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    input[type="url"] {
+      width: 70%;
+      padding: 8px;
+      margin-right: 10px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-top: 10px;
+      font-family: monospace;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fetch Original URL (with redirect)</h1>
+  
+  <div class="input-group">
+    <input type="url" id="urlInput" placeholder="Enter URL to fetch" value="https://linked.data.gov.au/def/csdm/wa-surveypoint-purpose/road-boundary">
+    <button onclick="fetchOriginal()">Fetch</button>
+  </div>
+
+  <div class="input-group">
+    <label for="errorLog">Error Log:</label>
+    <textarea id="errorLog" readonly placeholder="Errors will appear here..."></textarea>
+  </div>
+
+  <pre id="output">Click "Fetch" to start...</pre>
+
+  <script>
+    const output = document.getElementById("output");
+    const urlInput = document.getElementById("urlInput");
+    const errorLog = document.getElementById("errorLog");
+
+    function logError(message) {
+      const timestamp = new Date().toISOString();
+      errorLog.value += `[${timestamp}] ${message}\n`;
+      errorLog.scrollTop = errorLog.scrollHeight;
+    }
+
+    async function fetchOriginal() {
+      const originalUrl = urlInput.value.trim();
+      
+      if (!originalUrl) {
+        logError("Please enter a URL");
+        return;
+      }
+
+      output.textContent = "Loading...";
+      
+      try {
+        const res = await fetch(originalUrl, {
+          method: "GET",
+          redirect: "follow", // default, shown for clarity
+          headers: {
+            "Accept": "text/turtle"
+          }
+        });
+
+        let headerDump = '';
+        for (const [key, val] of res.headers.entries()) {
+          headerDump += `${key}: ${val}\n`;
+        }
+
+        const body = await res.text();
+
+        output.textContent =
+          `Status: ${res.status} ${res.statusText}\n\n` +
+          `--- Headers ---\n${headerDump}\n` +
+          `--- Body Start ---\n${body.slice(0, 1000)}\n...`;
+
+        if (!res.ok) {
+          console.log(res);
+          logError(`HTTP Error: ${res.status} ${res.statusText}`);
+        }
+
+      } catch (err) {
+        console.log(err);
+        output.textContent = "Fetch failed:\n" + JSON.stringify(err);
+        logError(`Fetch failed: ${err.message}`);
+      }
+    }
+
+    // Allow Enter key to trigger fetch
+    urlInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        fetchOriginal();
+      }
+    });
+  </script>
+</body>
+</html>

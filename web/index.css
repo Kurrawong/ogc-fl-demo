@@ -284,3 +284,23 @@ table.popup-table .tbl-value {
 .leaflet-popup-content {
     min-height: 500px;
 }
+
+/* Error icon styles */
+.error-icon {
+    font-size: 16px !important;
+    color: #f44336 !important;
+    position: static !important;
+    margin-left: 6px;
+    cursor: help;
+    vertical-align: middle;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.error-icon:hover {
+    opacity: 1;
+}
+
+.error-icon[data-error-type="unknown"] {
+    color: #d32f2f !important;
+}

@@ -27,6 +27,27 @@ let iriRefs = {};
 let iriLayers = {};
 let configData = {};
 
+// Fetch configuration options
+const fetchConfig = {
+    redirect: 'follow', // Follow 302 redirections
+    mode: 'cors',
+    credentials: 'same-origin'
+};
+
+const fetchCache = new Map();
+
+function cachedFetch(url, options) {
+    if (!fetchCache.has(url)) {
+        // Store the promise immediately.
+        // It will be a promise that resolves to a Response, or a rejected promise for network errors.
+        fetchCache.set(url, fetch(url, options));
+    }
+    // Return a promise that resolves to a CLONED response.
+    // This handles both cache hits and misses.
+    // If the cached promise is a rejection, .then is skipped and the rejection propagates.
+    return fetchCache.get(url).then(response => response.clone());
+}
+
 function capitalizeFirstChar(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -40,7 +61,7 @@ function getAbsoluteURL(relativePath) {
 async function getContextPrefixes(contextUrl) {
     try {
       // Fetch the context document
-      const response = await fetch(contextUrl);
+      const response = await cachedFetch(contextUrl, fetchConfig);
       const contextDocument = await response.text();
   
       // Parse the context document
@@ -66,7 +87,7 @@ async function resolveContext(...contextDefinitions) {
       // Handle complex context definition that contains both a URL and an inline object
       const [contextUrl, inlineContext] = contextDef;
       if (typeof contextUrl === 'string') {
-        const response = await fetch(contextUrl);
+        const response = await cachedFetch(contextUrl, fetchConfig);
         if (!response.ok) {
           throw new Error(`Failed to fetch context from ${contextUrl}`);
         }
@@ -79,7 +100,7 @@ async function resolveContext(...contextDefinitions) {
     } else if (typeof contextDef === 'string') {
       // If the context definition is a URL, fetch and merge it
       const contextUrl = contextDef;
-      const response = await fetch(contextUrl);
+      const response = await cachedFetch(contextUrl, fetchConfig);
       if (!response.ok) {
         throw new Error(`Failed to fetch context from ${contextUrl}`);
       }
@@ -104,7 +125,7 @@ async function mergeContexts(contextUrls, contextData={}) {
     }
     try {
       const contextResponses = await Promise.all(
-        contextUrls.map(url => fetch(url).then(response => response.json()))
+        contextUrls.map(url => cachedFetch(url, fetchConfig).then(response => response.json()))
       );
   
       const mergedContext = {
@@ -135,7 +156,8 @@ function flattenExpandedJsonLd(expanded) {
       }
       return properties;
     });
-    return flattened.length === 1 ? flattened[0] : flattened;
+    const result = flattened.length === 1 ? flattened[0] : flattened;
+    return result;
 }
 
 function outputValSimple(val) {
@@ -151,6 +173,96 @@ function dataTooltip(str) {
 }
 
 let tabUID = 0;
+
+// Analyze nested contexts and create property-to-context mappings
+function analyzeNestedContexts(context) {
+    const contextMappings = {};
+    const nestedContexts = {};
+    
+    // Scan the context for nested @context objects
+    for (const [key, value] of Object.entries(context)) {
+        if (value && typeof value === 'object' && '@context' in value) {
+            nestedContexts[key] = value;
+            // Map all properties in this nested context to the parent key
+            const nestedContext = value['@context'];
+            for (const nestedKey in nestedContext) {
+                contextMappings[nestedKey] = key;
+            }
+        }
+    }
+    
+    return { contextMappings, nestedContexts };
+}
+
+// Wrap properties by their appropriate nested context
+function wrapPropertiesByContext(properties, contextMappings) {
+    const wrapped = {};
+    const topLevelProps = {};
+    
+    // Separate properties by their context
+    for (const [key, value] of Object.entries(properties)) {
+        if (contextMappings[key]) {
+            // This property belongs to a nested context
+            const contextKey = contextMappings[key];
+            if (!wrapped[contextKey]) {
+                wrapped[contextKey] = {};
+            }
+            wrapped[contextKey][key] = value;
+        } else {
+            // This property belongs to top-level context
+            topLevelProps[key] = value;
+        }
+    }
+    
+    // Merge top-level properties with wrapped properties
+    return { ...topLevelProps, ...wrapped };
+}
+
+// Extract properties from all nested contexts in expanded result
+function extractFromAllContexts(expanded, contextMappings, nestedContexts) {
+    const flattened = flattenExpandedJsonLd(expanded);
+    const result = {};
+    
+    // Extract from top-level properties
+    for (const [key, value] of Object.entries(flattened)) {
+        // Check if this key corresponds to a nested context
+        const isNestedContext = Object.values(nestedContexts).some(context => {
+            const contextId = context['@id'];
+            return contextId && key.includes(contextId.replace('container:', ''));
+        });
+        
+        if (!isNestedContext) {
+            result[key] = value;
+        } else {
+            // This is a nested context, extract its properties
+            const nestedData = value;
+            const properties = Array.isArray(nestedData) ? nestedData[0] : nestedData;
+            if (properties && typeof properties === 'object') {
+                Object.assign(result, properties);
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Helper function to properly reinitialize Materialize tabs
+function reinitializeTabs(container) {
+    var tabElements = container.querySelectorAll('.proptabs');
+    if (tabElements.length > 0) {
+        // Destroy existing tab instances first
+        tabElements.forEach(function(tabEl) {
+            var existingInstance = M.Tabs.getInstance(tabEl);
+            if (existingInstance) {
+                existingInstance.destroy();
+            }
+        });
+        // Reinitialize tabs with a small delay to ensure DOM is ready
+        setTimeout(() => {
+            M.Tabs.init(tabElements, {});
+        }, 10);
+    }
+}
 
 function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     let mainstr = '';
@@ -176,7 +288,15 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
     jsonData.forEach((row, index)=>{
         featureIdx = index;
         let top = '';
-        let name = 'name' in row['Properties'] ? ' (' + row['Properties']['name'] + ')' : '';
+        console.log("*************** ROW", row);
+        let name = '';
+        if ('name' in row['Properties']) {
+            if(typeof(row['Properties']['name']) == 'string') {
+                name = ' (' + row['Properties']['name'] + ')';
+            } else if(row['Properties']['name']?.['label']) {
+                name = ' (' + row['Properties']['name']['label'] + ')';
+            }
+        }
         //console.log(name);
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
@@ -208,11 +328,18 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         top+= header(2);
     
         if(rawContext) {
-            str+= `<div class="tbl-container"><table class="popup-table">`;
-            Object.keys(row['Expanded Properties']).map(key=>{
-                str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
-            })
-            str+= '</table></div>';
+            if (row['Expanded Properties'] && Object.keys(row['Expanded Properties']).length > 0) {
+                str+= `<div class="tbl-container"><table class="popup-table">`;
+                Object.keys(row['Expanded Properties']).map(key=>{
+                    str+= `<tr><td class="tbl-label">${key}</td><td class="tbl-value">${outputValSimple(row['Expanded Properties'][key])}</td></tr>`;
+                })
+                str+= '</table></div>';
+            } else {
+                str+= `<div class="tbl-container"><div class="error-msg">No properties were expanded. This could be due to:<br/>
+                • Missing or invalid @context in the data<br/>
+                • Properties that don't match the context definitions<br/>
+                • JSON-LD expansion errors</div></div>`;
+            }
         } else {
             minWidthCol = cols.length;
         }
@@ -294,7 +421,18 @@ function createTableFromJson(container, jsonData, rawContext, contextsMerged) {
     });
 
     var elemsul = container.querySelectorAll('.collapsible');
-    var instances = M.Collapsible.init(elemsul, {});
+    var instances = M.Collapsible.init(elemsul, {
+        onOpenStart: function(el) {
+            // Reinitialize tabs when accordion item opens
+            reinitializeTabs(el);
+        },
+        onOpenEnd: function(el) {
+            // Also reinitialize tabs after accordion animation completes
+            setTimeout(() => {
+                reinitializeTabs(el);
+            }, 50);
+        }
+    });
 
 }
 
@@ -318,7 +456,10 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
 
     lastPopup = popup;
 
-    var instance = M.Tabs.init(contentElement.querySelectorAll('.proptabs'), {});
+    // Initialize tabs after popup content is set
+    setTimeout(() => {
+        var instance = M.Tabs.init(contentElement.querySelectorAll('.proptabs'), {});
+    }, 10);
 
     var popupWidth = popup.getElement().clientWidth
 
@@ -455,7 +596,7 @@ async function start() {
     //console.log("XCONTENT", mergedContext);
 
     // Load the GeoJSON data
-    fetch(sourceUrl)
+    cachedFetch(sourceUrl, fetchConfig)
     .then(function(response) {
         return response.json();
     })
@@ -490,125 +631,121 @@ async function start() {
         async function processFeatureProperties(feature) {
             let propertiesExpanded = feature.properties;
             try {
+                if (mergedContext && Object.keys(mergedContext['@context'] || {}).length > 0) {
+                    const { contextMappings, nestedContexts } = analyzeNestedContexts(mergedContext['@context']);
+                    
+                    const propertyMapping = {};
+                    for (const propName of Object.keys(feature.properties)) {
+                        try {
+                            const singlePropObj = { [propName]: feature.properties[propName] };
+                            const wrappedSingleProp = wrapPropertiesByContext(singlePropObj, contextMappings);
+                            const singleExpanded = await jsonld.expand(wrappedSingleProp, {expandContext: mergedContext});
+                            const extractedSingleProp = extractFromAllContexts(singleExpanded, contextMappings, nestedContexts);
+                            
+                            const expandedKeys = Object.keys(extractedSingleProp);
+                            propertyMapping[propName] = expandedKeys.length > 0 ? expandedKeys[0] : propName;
+                        } catch (error) {
+                            console.error(`Error individually expanding "${propName}":`, error);
+                            propertyMapping[propName] = propName;
+                        }
+                    }
+                    
+                    const wrappedProperties = wrapPropertiesByContext(feature.properties, contextMappings);
+                    const expanded = await jsonld.expand(wrappedProperties, {expandContext: mergedContext});
+                    const mainExpandedProps = extractFromAllContexts(expanded, contextMappings, nestedContexts);
 
-//                console.log("PROCESS", "FP=", feature.properties, "MERGED CTX", mergedContext)
-
-                propertiesExpanded = flattenExpandedJsonLd(await jsonld.expand({...feature.properties}, {expandContext: mergedContext}));
-//                console.log("MC", mergedContext, "FP", feature.properties, "FPX", propertiesExpanded)
-                if(propertiesExpanded.length == 0) {
-                    propertiesExpanded = feature.properties;
-                } else {
-                    const keyObj = {};
-                    Object.keys(feature.properties).forEach((key, index)=>{
-                        keyObj[key] = index;
-                    })
-                    dummy = flattenExpandedJsonLd(await jsonld.expand({...keyObj}, {expandContext: mergedContext}));
-                    propertiesExpanded = sortObjectByValues(dummy, propertiesExpanded);
-//                    console.log("DUMMY", dummy, sortObjectByValues(dummy, propertiesExpanded))
+                    if (mainExpandedProps && Object.keys(mainExpandedProps).length > 0) {
+                        const finalProperties = {};
+                        for (const originalKey of Object.keys(feature.properties)) {
+                            const expandedKey = propertyMapping[originalKey] || originalKey;
+                            if (mainExpandedProps.hasOwnProperty(expandedKey)) {
+                                finalProperties[expandedKey] = mainExpandedProps[expandedKey];
+                            } else if (feature.properties.hasOwnProperty(originalKey)) {
+                                finalProperties[originalKey] = feature.properties[originalKey];
+                            }
+                        }
+                        propertiesExpanded = finalProperties;
+                    }
                 }
-                //console.log(propertiesExpanded);
-            } catch (ex) {
-                console.log(ex, feature.properties)
+            } catch (err) {
+                console.error('Error expanding feature properties:', err);
             }
-            // console.log("PROPS", feature.properties);
-            // console.log("PROPS EXPANDED", flattenExpandedJsonLd(propertiesExpanded));
+
             const propInfo = {'Resolved': {}, 'Resolved +OGC': {}, 'Lookups': {}};
-            for(prop in propertiesExpanded) {
+            for(const prop in propertiesExpanded) {
                 propInfo['Resolved'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfig, {}, true);
                 propInfo['Resolved +OGC'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
                 propInfo['Lookups'][prop] = analyseProperty(propertiesExpanded, prop, annotationConfigFull, labelContext, true);
             }
 
-            propTable.push({
+            return {
                 "Properties": feature.properties,
                 "Expanded Properties": propertiesExpanded,
                 ...propInfo
-            });
-            return propertiesExpanded
+            };
         }
 
-        console.log('FEATURE DATA', data);
-        let fIdx = 0;
-        // Create a Leaflet GeoJSON layer and add it to the map
-        geojsonLayer = L.geoJSON(data, {
-            onEachFeature: async function(feature, layer) {
+        // --- Data Processing and UI Rendering ---
 
-                console.log("FEATURE FOUND", feature);
-                var geometryType = feature.geometry.type;
-                var coordinates = feature.geometry.coordinates;
-                var popupCoords = undefined
-              
-                if(geometryType == 'Point') {
+        // 1. Process all features first to avoid race conditions
+        if (data && data.type === 'Feature') { // Handle single feature case
+            data = {type: 'FeatureCollection', features: [data]};
+        }
+
+        if (data && data.features) {
+            const processingPromises = data.features.map(feature => processFeatureProperties(feature));
+            propTable = await Promise.all(processingPromises);
+        } else {
+            propTable = [];
+        }
+
+        // 2. Create the main table view now that all data is processed
+        createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
+
+        // 3. Create the GeoJSON layer with synchronous feature handling
+        let featureIndex = 0;
+        geojsonLayer = L.geoJSON(data, {
+            onEachFeature: function(feature, layer) {
+                const geometryType = feature.geometry.type;
+                const coordinates = feature.geometry.coordinates;
+                let popupCoords;
+
+                if (geometryType === 'Point') {
                     updateBoundingBox(coordinates[1], coordinates[0]);
                     popupCoords = {lat: coordinates[1], lng: coordinates[0]};
-                } else {
+                } else if (layer.getBounds) {
                     const bounds = layer.getBounds();
                     popupCoords = bounds.getCenter();
-
-                    if(geometryType == 'LineString' && bounds.getNorth() == bounds.getSouth() && bounds.getWest() == bounds.getEast()) {
-                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                    } else {
-                        // Update the bounding box with the bounds of the layer
-                        updateBoundingBox(bounds.getNorth(), bounds.getWest());
-                        updateBoundingBox(bounds.getSouth(), bounds.getEast());
-                    }
+                    updateBoundingBox(bounds.getNorth(), bounds.getWest());
+                    updateBoundingBox(bounds.getSouth(), bounds.getEast());
                 }
-                if('name' in feature.properties && 'iri' in feature.properties) {
+
+                if (feature.properties && feature.properties.iri && feature.properties.name) {
                     iriRefs[feature.properties.iri] = feature.properties.name;
                     iriLayers[feature.properties.iri] = layer;
                 }
-                const propertiesExpanded = await processFeatureProperties(feature);
-                const lastFeature = [propTable[fIdx]];
+                
+                const featureData = propTable[featureIndex];
 
                 layer.on('click', function() {
-                    // Function to handle click event
+                    if (featureData) {
+                        createPopupFromJson(popupCoords, [featureData], rawContext, mergedContext, feature.properties);
+                    } else {
+                        console.error("No processed data found for feature index:", featureIndex);
+                    }
 
-                    console.log("1. SHOWING DETAILS FOR", feature.properties);
-                    console.log("2. EXPANDED DETAILS", propertiesExpanded);
-
-//                    showDetails(popupCoords, propertiesExpanded, labelContext);//feature.properties);
-                    createPopupFromJson(popupCoords, lastFeature, rawContext, mergedContext, feature.properties);
-
-
-                    if(layer.setStyle) {
-                        if(lastLayer) {
+                    if (layer.setStyle) {
+                        if (lastLayer) {
                             lastLayer.setStyle({color: lastLayerColor});
                         }
-                        lastLayerColor = layer.getElement().getAttribute('stroke')
-                        layer.setStyle({ color: 'red' }); // Change the color to red or any desired color
+                        lastLayerColor = layer.getElement() ? layer.getElement().getAttribute('stroke') : undefined;
+                        layer.setStyle({ color: 'red' });
                         lastLayer = layer;
                     }
                 });
-                fIdx++;
-
+                featureIndex++;
             }
         }).addTo(map);
-
-//        console.log("PROPERTIES", propTable);
-        // no properties found
-        setTimeout(()=>{
-            if(propTable.length == 0) {
-                // manual process of features...
-                if(data.type == 'Feature') {
-                    data = {type: 'FeatureCollection', features: [data]};
-                }
-                if(data.type == 'FeatureCollection' && data.features) {
-                    data.features.forEach(async feature=>{
-                        const propertiesExpanded = await processFeatureProperties(feature)
-                    })
-                }
-            }
-        }, 50);
-
-
-        setTimeout(()=>{
-            document.getElementById('info').innerHTML = '';
-            createTableFromJson(document.getElementById('info'), propTable, rawContext, mergedContext);
-//            setTimeout(()=>{
-//                document.getElementById('info').innerHTML = JSON.stringify(propTable);
-//                lookup();
-//            }, 150);
-        }, 100);
 
         map.on("click", function(event) {
             var id = event.originalEvent.target.id;
@@ -830,7 +967,12 @@ async function start() {
                 log.push('URI shortened before outputting label')
                 data.label = '<span data-lookup=' + data.label + '>' + newLabel + '</span>';
             } else {
-                data.label = '<span data-lookup=' + data.label + '>' + data.label + '</span>';
+                // Only set data-lookup if the label is actually a URL
+                if(data.label.match(/^https?:\/\//)) {
+                    data.label = '<span data-lookup=' + data.label + '>' + data.label + '</span>';
+                } else {
+                    data.label = data.label;
+                }
             }
             dv = true
             // if(nestLevel > 0) {
@@ -1009,7 +1151,7 @@ async function mergeJsonLdData(jsonDataArray) {
 
 async function mergeJsonFromUrls(urls) {
     const mergedData = await Promise.all(
-      urls.map(url => fetch(url).then(response => response.json()))
+      urls.map(url => cachedFetch(url, fetchConfig).then(response => response.json()))
     ).then(jsonDataArray =>
       jsonDataArray.reduce((merged, json) => ({ ...merged, ...json }), {})
     );
@@ -1032,7 +1174,7 @@ const init = async () => {
 
         const urlParams = new URLSearchParams(window.location.search);
         const configParam = urlParams.get('config');
-        const response = await fetch(configParam ? configParam : './config.json');
+        const response = await cachedFetch(configParam ? configParam : './config.json', fetchConfig);
         configData = await response.json();
         configJson = configData;
         let elems = document.querySelectorAll('[data-tooltip]');
@@ -1156,19 +1298,49 @@ function lookup() {
         if(!url) {
             return
         }
+        
+        console.log("LOOKUP: Processing URL:", url);
+        
         if(url in lookupLabelCache) {
         } else {
             try {
                 lookupLabelCache[url] = await lookupExternalResource(url, '', acceptableContentTypes);
             } catch (ex) {
-                if(el.tagName == 'a') {
-                    el.innerHTML = el.innerHTML + '<br/><span>Error </span><i style="position:relative;" class="material-icons" data-tooltip="' + 
-                        ex.message + ' looking up ' + url + '">help_outline</i>';
-                } else {
-                    el.innerHTML = `<a href=${url} class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
-                    <div style="color:black;" class="error-msg">Error <i style="position:relative;" class="material-icons" data-tooltip="${ex.message} looking up ${url}">help_outline</i></div>`
+                console.log("ERROR HANDLING: Caught error for URL:", url, "Error:", ex.message);
+                // Store the error in cache so we don't retry
+                lookupLabelCache[url] = null;
+                
+                // Determine error code and message
+                let errorCode = 'UNKNOWN';
+                let errorMessage = ex.message;
+                
+                if (ex.type === 'HTTP_ERROR') {
+                    errorCode = ex.status.toString();
+                } else if (ex.type === 'CONTENT_TYPE_ERROR') {
+                    errorCode = 'CONTENT_TYPE';
+                } else if (ex.type === 'TIMEOUT_ERROR') {
+                    errorCode = 'TIMEOUT';
+                } else if (ex.type === 'NETWORK_ERROR') {
+                    errorCode = 'NETWORK';
+                } else if (ex.type === 'UNKNOWN_ERROR') {
+                    errorCode = 'UNKNOWN';
                 }
-                M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
+                
+                // Only show error indicators for actual external URLs
+                if (url.startsWith('http')) {
+                    const tooltipText = `${errorMessage}\nURL: ${url}`;
+                    console.log("ADDING ERROR ICON for URL:", url, "Error code:", errorCode);
+                    if(el.tagName == 'a') {
+                        // Add error icon to existing link
+                        el.innerHTML = el.innerHTML + `<i class="material-icons error-icon" data-error-code="${errorCode}" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}">error</i>`;
+                    } else {
+                        // Create link with error icon
+                        el.innerHTML = `<a href="${url}" class="ext">${el.innerHTML}<i class="material-icons">open_in_new</i></a>
+                        <i class="material-icons error-icon" data-error-code="${errorCode}" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}">error</i>`;
+                    }
+                    console.log("ERROR ICON ADDED, element HTML:", el.innerHTML);
+                    M.Tooltip.init(el.querySelector('[data-tooltip]'), {});
+                }
             }
         }
         const label = lookupLabelCache[url];
@@ -1215,15 +1387,25 @@ document.addEventListener('DOMContentLoaded', function() {
 // lookup rdf from external resource, future could support extracting labels, etc by using a sparql query
 async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) {
     try {
-      const response = await fetch(url, {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await cachedFetch(url, {
+        ...fetchConfig,
         headers: {
           'Accept': acceptableContentTypes.join(', ')
         },
-        redirect: 'follow'
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const error = new Error(`HTTP error! Status: ${response.status} - ${url}`);
+        error.status = response.status;
+        error.type = 'HTTP_ERROR';
+        throw error;
       }
 
       const contentType = response.headers.get('content-type');
@@ -1231,7 +1413,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       // Check if the received content type partially matches any acceptable content type
       let foundType = '';
       const isAccepted = acceptableContentTypes.some(type => {
-        if(contentType.startsWith(type)) {
+        if(contentType && contentType.startsWith(type)) {
             foundType = type;
             return true;
         } else {
@@ -1240,24 +1422,22 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       });
 
       if (!isAccepted) {
-        throw new Error(`Received unexpected content type: ${contentType}`);
+        const error = new Error(`Received unexpected content type: ${contentType || 'unknown'} - ${url}, check the resource exists`);
+        error.type = 'CONTENT_TYPE_ERROR';
+        throw error;
       } else {
         console.log("Found type " + foundType)
       }
 
       const rdfData = await response.text();
 
+      console.log("RDF: DATA", url, rdfData);
+
       // Create an RDF store using rdflib.js
       const store = new $rdf.graph();
 
       // Parse RDF data with the received content type
       $rdf.parse(rdfData, store, url, foundType);
-
-    //   const queryObj = $rdf.SPARQLToQuery(sparqlQuery, true, store);
-    //   // Run SPARQL query
-    //   const results = store.query(queryObj);
-    //   console.log("SPARQL result", results) 
-    //     --> the result object is undefined
 
       const predicates = ['http://www.w3.org/2004/02/skos/core#prefLabel', 'http://purl.org/dc/terms/title', 'https://schema.org/name', 'http://www.w3.org/2000/01/rdf-schema#label'];
 
@@ -1275,18 +1455,34 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       }
 
       return lbl;
-    
-    //   // Log or process the query results
-    //   console.log('SPARQL Query Results:', results);
 
     } catch (error) {
-      //console.error('Fetch and run SPARQL error:', error);
-      throw new Error(error);
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error(`Request timeout - ${url} took too long to respond`);
+        timeoutError.type = 'TIMEOUT_ERROR';
+        throw timeoutError;
+      }
+      // Handle network errors (including CORS)
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        const networkError = new Error(`Network error - Unable to fetch (may be CORS restricted)`);
+        networkError.type = 'NETWORK_ERROR';
+        throw networkError;
+      }
+      // Re-throw other errors with more context, preserving their type
+      if (error.type) {
+        throw error;
+      } else {
+        const genericError = new Error(`${error.message} - ${url}`);
+        genericError.type = 'UNKNOWN_ERROR';
+        throw genericError;
+      }
     }
   }
 
 
 // Specify the acceptable content types
-const acceptableContentTypes = ['application/ld+json', 'application/n-triples', 'application/rdf+xml', 'text/turtle'];
-
+const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'application/rdf+xml'];
+//'application/ld+json'
+//'text/anot+turtle'
   
