@@ -1482,7 +1482,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
 
 
 // Specify the acceptable content types
-const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'application/rdf+xml'];
+const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'application/rdf+xml', 'text/anot+turtle'];
 //'application/ld+json'
 //'text/anot+turtle'
   
