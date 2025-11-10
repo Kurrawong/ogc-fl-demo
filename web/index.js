@@ -1304,7 +1304,8 @@ function lookup() {
         if(url in lookupLabelCache) {
         } else {
             try {
-                lookupLabelCache[url] = await lookupExternalResource(url, '', acceptableContentTypes);
+                lookupLabelCache[url] = await lookupExternalResource(url, '', acceptableContentTypes,
+                  mappedContentTypes);
             } catch (ex) {
                 console.log("ERROR HANDLING: Caught error for URL:", url, "Error:", ex.message);
                 // Store the error in cache so we don't retry
@@ -1385,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // lookup rdf from external resource, future could support extracting labels, etc by using a sparql query
-async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) {
+async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes, mappedContentTypes) {
     try {
       // Create an AbortController for timeout
       const controller = new AbortController();
@@ -1428,6 +1429,8 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
       } else {
         console.log("Found type " + foundType)
       }
+
+      foundType = mappedContentTypes?.[foundType] || foundType;
 
       const rdfData = await response.text();
 
@@ -1485,4 +1488,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes) 
 const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'application/rdf+xml', 'text/anot+turtle'];
 //'application/ld+json'
 //'text/anot+turtle'
-  
+
+const mappedContentTypes = {
+  'text/anot+turtle': 'text/turtle',
+}
