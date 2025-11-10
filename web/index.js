@@ -1449,7 +1449,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes, 
       for(predIdx in predicates) {
         const pred = predicates[predIdx];
         if(lbl == '') {
-            const m = store.statementsMatching(undefined, $rdf.sym(pred));
+            const m = store.statementsMatching($rdf.sym(url), $rdf.sym(pred));
             if(m && m.length > 0) {
                 lbl = m[0].object.value;
                 break;
