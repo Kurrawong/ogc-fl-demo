@@ -57,7 +57,7 @@
         {
           "name": "OGC Record",
           "description": "An OGC API records items mapped to DCAT",
-          "uri": "https,://ogcincubator.github.io/geodcat-ogcapi-records/build/tests/geo/geodcat/geodcat-records/example_1_1.jsonld"
+          "uri": "https://ogcincubator.github.io/geodcat-ogcapi-records/build/tests/geo/geodcat/geodcat-records/example_1_1.jsonld"
         }
     ]
 }
