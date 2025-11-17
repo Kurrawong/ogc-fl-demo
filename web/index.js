@@ -1278,12 +1278,13 @@ init()
 
 let lookupLabelCache = {};
 
-function lookup() {
+async function lookup() {
     //console.log('**********************************')
     // document.querySelectorAll('.table-lookups [data-check] pre a').forEach(el=>{
     //     console.log("DATA CHECK", el.getAttribute('href'))
     // })
-    document.querySelectorAll('.table-lookups [data-lookup],.value-lookups [data-check] pre a').forEach(async (el)=>{
+    const lookupElems = Array.from(document.querySelectorAll('.table-lookups [data-lookup],.value-lookups [data-check] pre a'));
+    await Promise.all(lookupElems.map(async (el)=>{
         let url = el.getAttribute('data-lookup')
         const done = el.getAttribute('lookup-done')
         if(done) {
@@ -1343,7 +1344,7 @@ function lookup() {
                 }
             }
         }
-        const { label, description } = lookupLabelCache[url];
+        const { label, description } = lookupLabelCache[url] || {};
         if (label?.length) {
             console.log("SETTING LABEL ", label, " FROM ", url)
             console.log(el)
@@ -1355,11 +1356,11 @@ function lookup() {
             }
         }
         if (description?.length) {
-          el.setAttribute('data-tooltip', description)
+          el.setAttribute('data-tooltip', description);
         }
-    })
-    //let elems = document.querySelectorAll('[data-tooltip]');
-
+    }));
+    let elems = document.querySelectorAll('[data-tooltip]');
+    M.Tooltip.init(elems, []);
 }
 
 function sidebarHide() {
