@@ -3,7 +3,7 @@ function setElementHeightToFillScreen(elementId) {
     var screenHeight = window.innerHeight;
     var elementOffsetTop = element.offsetTop;
     var elementHeight = screenHeight - elementOffsetTop - 20;
-  
+
     element.style.height = elementHeight + "px";
 }
 
@@ -63,13 +63,13 @@ async function getContextPrefixes(contextUrl) {
       // Fetch the context document
       const response = await cachedFetch(contextUrl, fetchConfig);
       const contextDocument = await response.text();
-  
+
       // Parse the context document
       const context = await jsonld.fromRDF(contextDocument, { format: 'application/nquads' });
-  
+
       // Extract the prefixes from the context
       const prefixes = Object.keys(context);
-  
+
       return prefixes;
     } catch (error) {
       console.error(error);
@@ -127,7 +127,7 @@ async function mergeContexts(contextUrls, contextData={}) {
       const contextResponses = await Promise.all(
         contextUrls.map(url => cachedFetch(url, fetchConfig).then(response => response.json()))
       );
-  
+
       const mergedContext = {
         "@context": {
           ...contextResponses.reduce((acc, response) => {
@@ -136,7 +136,7 @@ async function mergeContexts(contextUrls, contextData={}) {
           ...contextData // Merge the provided contextData
         }
       };
-  
+
       return mergedContext;
     } catch (error) {
       console.error(error);
@@ -178,7 +178,7 @@ let tabUID = 0;
 function analyzeNestedContexts(context) {
     const contextMappings = {};
     const nestedContexts = {};
-    
+
     // Scan the context for nested @context objects
     for (const [key, value] of Object.entries(context)) {
         if (value && typeof value === 'object' && '@context' in value) {
@@ -190,7 +190,7 @@ function analyzeNestedContexts(context) {
             }
         }
     }
-    
+
     return { contextMappings, nestedContexts };
 }
 
@@ -198,7 +198,7 @@ function analyzeNestedContexts(context) {
 function wrapPropertiesByContext(properties, contextMappings) {
     const wrapped = {};
     const topLevelProps = {};
-    
+
     // Separate properties by their context
     for (const [key, value] of Object.entries(properties)) {
         if (contextMappings[key]) {
@@ -213,7 +213,7 @@ function wrapPropertiesByContext(properties, contextMappings) {
             topLevelProps[key] = value;
         }
     }
-    
+
     // Merge top-level properties with wrapped properties
     return { ...topLevelProps, ...wrapped };
 }
@@ -222,7 +222,7 @@ function wrapPropertiesByContext(properties, contextMappings) {
 function extractFromAllContexts(expanded, contextMappings, nestedContexts) {
     const flattened = flattenExpandedJsonLd(expanded);
     const result = {};
-    
+
     // Extract from top-level properties
     for (const [key, value] of Object.entries(flattened)) {
         // Check if this key corresponds to a nested context
@@ -230,7 +230,7 @@ function extractFromAllContexts(expanded, contextMappings, nestedContexts) {
             const contextId = context['@id'];
             return contextId && key.includes(contextId.replace('container:', ''));
         });
-        
+
         if (!isNestedContext) {
             result[key] = value;
         } else {
@@ -242,7 +242,7 @@ function extractFromAllContexts(expanded, contextMappings, nestedContexts) {
             }
         }
     }
-    
+
     return result;
 }
 
@@ -300,7 +300,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
         //console.log(name);
         name = name == '' ? ('id' in row['Properties'] ? row['Properties']['id'] : '') : name;
         name = name == '' ? ('iri' in row['Properties'] ? row['Properties']['iri'] : '') : name;
-        
+
         if(style == 'table') {
             mainstr+= `<li${featureIdx == 0 ? ' class="active"' : ''}>
             <div class="collapsible-header"><i class="material-icons">arrow</i>Feature #${index + 1}${name}</div>
@@ -326,7 +326,7 @@ function getTableFromJson(jsonData, rawContext, contextsMerged, style) {
 
         str = '';
         top+= header(2);
-    
+
         if(rawContext) {
             if (row['Expanded Properties'] && Object.keys(row['Expanded Properties']).length > 0) {
                 str+= `<div class="tbl-container"><table class="popup-table">`;
@@ -445,7 +445,7 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
 
     let contentElement = document.createElement('div');
     contentElement.innerHTML = `<div class="ogc-off"><h2>${displayName}</h2><div style="max-height:400px;overflow:scroll;">` + mainstr + `</div></div>`;
-        
+
     // Display the details in a popup or any other element on the page
     let popup = L.popup()
         .setLatLng(popupCoords)
@@ -478,7 +478,7 @@ function createPopupFromJson(popupCoords, jsonData, rawContext, contextsMerged, 
     lookup();
 
     let elems = document.querySelectorAll('[data-tooltip]');
-    M.Tooltip.init(elems, {});  
+    M.Tooltip.init(elems, {});
 
 }
 
@@ -490,13 +490,13 @@ function ogcShine(el) {
     const isOGC = el.parentElement.getAttribute('class') != 'ogc-off'
     el.parentElement.setAttribute('class', 'ogc-loading');
 
-    setTimeout(()=>{ 
+    setTimeout(()=>{
         el.parentElement.setAttribute('class', isOGC ? 'ogc-off' : 'ogc-loaded')
         el.parentElement.getElementsByClassName('btn')[0].classList.add('disabled');
         M.toast({html: (isOGC ? 'Linked data removed' : 'Showing linked data'), })
     }, 2500);
 }
-  
+
 function flattenValue(value) {
     if (typeof value === 'object' && value !== null && '@value' in value) {
       return value['@value'];
@@ -557,7 +557,7 @@ function shortenLabel(label, context) {
 }
 
 let propTable = [];
-        
+
 async function start() {
 
     // Initialize min/max values with initial coordinates
@@ -572,7 +572,7 @@ async function start() {
         maxLat = Math.max(maxLat, lat);
         minLng = Math.min(minLng, lng);
         maxLng = Math.max(maxLng, lng);
-    }    
+    }
 
     // To clear the GeoJSON layer
     if (geojsonLayer) {
@@ -633,7 +633,7 @@ async function start() {
             try {
                 if (mergedContext && Object.keys(mergedContext['@context'] || {}).length > 0) {
                     const { contextMappings, nestedContexts } = analyzeNestedContexts(mergedContext['@context']);
-                    
+
                     const propertyMapping = {};
                     for (const propName of Object.keys(feature.properties)) {
                         try {
@@ -641,7 +641,7 @@ async function start() {
                             const wrappedSingleProp = wrapPropertiesByContext(singlePropObj, contextMappings);
                             const singleExpanded = await jsonld.expand(wrappedSingleProp, {expandContext: mergedContext});
                             const extractedSingleProp = extractFromAllContexts(singleExpanded, contextMappings, nestedContexts);
-                            
+
                             const expandedKeys = Object.keys(extractedSingleProp);
                             propertyMapping[propName] = expandedKeys.length > 0 ? expandedKeys[0] : propName;
                         } catch (error) {
@@ -649,7 +649,7 @@ async function start() {
                             propertyMapping[propName] = propName;
                         }
                     }
-                    
+
                     const wrappedProperties = wrapPropertiesByContext(feature.properties, contextMappings);
                     const expanded = await jsonld.expand(wrappedProperties, {expandContext: mergedContext});
                     const mainExpandedProps = extractFromAllContexts(expanded, contextMappings, nestedContexts);
@@ -724,7 +724,7 @@ async function start() {
                     iriRefs[feature.properties.iri] = feature.properties.name;
                     iriLayers[feature.properties.iri] = layer;
                 }
-                
+
                 const featureData = propTable[featureIndex];
 
                 layer.on('click', function() {
@@ -749,7 +749,7 @@ async function start() {
 
         map.on("click", function(event) {
             var id = event.originalEvent.target.id;
-          
+
             // Check if the clicked layer is the map
             if (id == 'map') {
                 if(lastLayer) {
@@ -880,16 +880,16 @@ async function start() {
             //log.push('Property is an array');
             helpValue = value.length == 0 ? '' : (typeof(value[0]) == 'object' ? JSON.stringify(value) : value.join(', '));
             let vals = [];
-            strValue = value.map(val=>{ 
+            strValue = value.map(val=>{
                 let isObj = false;
-                
+
                 if(typeof val === 'object' && val !== null ) {
                     //val = JSON.stringify(val, undefined, 2);
                     isObj = true;
                 }
                 const outval = outputPropertyValue(name, val, annotations, labelContext, dataLookup, nestLevel);
                 log = [...log, ...outval.log];
-                vals.push(outval.val); 
+                vals.push(outval.val);
                 return isObj ? `<pre>${outval.str}</pre>` : outval.str;
             }).join('<br/>');
             data.value = vals.join(', ');
@@ -913,7 +913,6 @@ async function start() {
             log.push('Property found in annotations');
             const props = annotations[name];
             data.annotations = props;
-            //console.log(props, properties);
             if('name' in props) {
                 label = props.name
                 log.push('Set label to annotation name "' + label + '"')
@@ -931,7 +930,7 @@ async function start() {
                 data.tooltip = tooltip;
             }
 
-            const target = ('seeAlso' in props ? props.seeAlso : 
+            const target = ('seeAlso' in props ? props.seeAlso :
                 ('iri' in props ? props.iri : (nameLink ? nameLink : undefined)));
 
             if(target !== undefined) {
@@ -987,7 +986,7 @@ async function start() {
             tableRow: r + `<tr><td class="tbl-label">${label}</td>
                 <td class="tbl-value"${dv ? ' data-check="true"' : ''}><pre>${strValue}</pre></td></tr>`
         }
-        
+
     }
 
     // Function to handle the click event and display details
@@ -1013,8 +1012,8 @@ async function start() {
         // Display the details in a popup or any other element on the page
         let popup = L.popup()
             .setLatLng(popupCoords)
-            .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + info + infoOGC + 
-                `<button class="btn" onclick="ogcShine(this)">Use Linked Data</button>` + 
+            .setContent(`<div class="ogc-off"><h2>${displayName}</h2>` + info + infoOGC +
+                `<button class="btn" onclick="ogcShine(this)">Use Linked Data</button>` +
                 `<div class="progress-wrapper"><div class="progress"><div class="indeterminate"></div></div></div>` +
                 `</div>`)
             .openOn(map);
@@ -1117,17 +1116,17 @@ function internalLink(event) {
 
 // Function to bring layers within the bounding box to the front
 function bringToFrontLayers() {
-  
+
     // Bring the main GeoJSON layer to the front and change its color
     geojsonLayer.bringToFront();
-  
+
     // Sort the layers based on their area in ascending order
     var sortedLayers = geojsonLayer.getLayers().sort(function (layerA, layerB) {
       var areaA = calculateLayerArea(layerA);
       var areaB = calculateLayerArea(layerB);
       return areaB - areaA;
     });
-  
+
     // Loop through the sorted layers and bring them to the front
     sortedLayers.forEach(function (layer, index) {
       if (index > 0 && layer.bringToFront) {
@@ -1138,14 +1137,14 @@ function bringToFrontLayers() {
 
 async function mergeJsonLdData(jsonDataArray) {
     let mergedData = {};
-  
+
     for (const jsonData of jsonDataArray) {
       mergedData = await jsonld.merge(mergedData, jsonData);
     }
-  
+
     // Convert mergedData back to JSON-LD format
     const mergedJsonLd = JSON.stringify(mergedData, undefined, 2);
-  
+
     return mergedJsonLd;
 }
 
@@ -1155,7 +1154,7 @@ async function mergeJsonFromUrls(urls) {
     ).then(jsonDataArray =>
       jsonDataArray.reduce((merged, json) => ({ ...merged, ...json }), {})
     );
-  
+
     return mergedData;
 }
 
@@ -1178,7 +1177,7 @@ const init = async () => {
         configData = await response.json();
         configJson = configData;
         let elems = document.querySelectorAll('[data-tooltip]');
-        M.Tooltip.init(elems, {});    
+        M.Tooltip.init(elems, {});
 
         document.getElementById('helpLink').setAttribute('href', configJson.helpLink);
 
@@ -1190,8 +1189,8 @@ const init = async () => {
                 if(i == 1) {
                     document.getElementById('file1').value = fn;
                 }
-                ds.push({ name: "Resource " + i, descriptionHTML: 
-                    `<a href="${dsFile(path, fn)}" target="_blank">${fn}</a>`,  
+                ds.push({ name: "Resource " + i, descriptionHTML:
+                    `<a href="${dsFile(path, fn)}" target="_blank">${fn}</a>`,
                     "uri": dsFile(path, fn)});
             } else {
                 break;
@@ -1254,7 +1253,7 @@ const init = async () => {
         document.getElementById('title').innerText = configData.title;
         document.getElementById('about').innerText = configData.about;
         checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        
+
         // Attach event listeners to checkboxes
         checkboxes.forEach(function(checkbox) {
             if(sourceUrl == '' && checkbox.checked) {
@@ -1267,7 +1266,7 @@ const init = async () => {
             checkbox.addEventListener('click', handleCheckboxClick);
         });
         setContext();
-  
+
         start()
 
     } catch (error) {
@@ -1298,9 +1297,9 @@ function lookup() {
         if(!url) {
             return
         }
-        
+
         console.log("LOOKUP: Processing URL:", url);
-        
+
         if(url in lookupLabelCache) {
         } else {
             try {
@@ -1310,11 +1309,11 @@ function lookup() {
                 console.log("ERROR HANDLING: Caught error for URL:", url, "Error:", ex.message);
                 // Store the error in cache so we don't retry
                 lookupLabelCache[url] = null;
-                
+
                 // Determine error code and message
                 let errorCode = 'UNKNOWN';
                 let errorMessage = ex.message;
-                
+
                 if (ex.type === 'HTTP_ERROR') {
                     errorCode = ex.status.toString();
                 } else if (ex.type === 'CONTENT_TYPE_ERROR') {
@@ -1326,7 +1325,7 @@ function lookup() {
                 } else if (ex.type === 'UNKNOWN_ERROR') {
                     errorCode = 'UNKNOWN';
                 }
-                
+
                 // Only show error indicators for actual external URLs
                 if (url.startsWith('http')) {
                     const tooltipText = `${errorMessage}\nURL: ${url}`;
@@ -1344,16 +1343,19 @@ function lookup() {
                 }
             }
         }
-        const label = lookupLabelCache[url];
-        if(label && label != '') {
+        const { label, description } = lookupLabelCache[url];
+        if (label?.length) {
             console.log("SETTING LABEL ", label, " FROM ", url)
             console.log(el)
-            if(el.tagName == 'a') {
+            if (el.tagName === 'a') {
                 el.classList.add('ext')
                 el.innerHTML = `${label}<i class="material-icons">open_in_new</i>`;
             } else {
                 el.innerHTML = `<a href=${url} class="ext">${label}<i class="material-icons">open_in_new</i></a>`;
             }
+        }
+        if (description?.length) {
+          el.setAttribute('data-tooltip', description)
         }
     })
     //let elems = document.querySelectorAll('[data-tooltip]');
@@ -1378,12 +1380,21 @@ document.addEventListener('DOMContentLoaded', function() {
         el.classList.toggle('hide');
         // var sideNavInstance = M.Sidenav.getInstance(elems[0]);
         // sideNavInstance.close();
-    }); 
+    });
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('file' + 1)) {
         sidebarHide();
     }
 });
+
+function findMatchingPredicate(store, resourceUrl, predicates) {
+  for (const pred of predicates) {
+    const matching = store.statementsMatching($rdf.sym(resourceUrl), $rdf.sym(pred));
+    if (matching?.length) {
+      return matching[0].object.value;
+    }
+  }
+}
 
 // lookup rdf from external resource, future could support extracting labels, etc by using a sparql query
 async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes, mappedContentTypes) {
@@ -1399,7 +1410,7 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes, 
         },
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -1442,22 +1453,10 @@ async function lookupExternalResource(url, sparqlQuery, acceptableContentTypes, 
       // Parse RDF data with the received content type
       $rdf.parse(rdfData, store, url, foundType);
 
-      const predicates = ['http://www.w3.org/2004/02/skos/core#prefLabel', 'http://purl.org/dc/terms/title', 'https://schema.org/name', 'http://www.w3.org/2000/01/rdf-schema#label'];
-
-      let lbl = '';
-      
-      for(predIdx in predicates) {
-        const pred = predicates[predIdx];
-        if(lbl == '') {
-            const m = store.statementsMatching($rdf.sym(url), $rdf.sym(pred));
-            if(m && m.length > 0) {
-                lbl = m[0].object.value;
-                break;
-            }
-        }
-      }
-
-      return lbl;
+      return {
+        label: findMatchingPredicate(store, url, labelPredicates) || '',
+        description: findMatchingPredicate(store, url, descriptionPredicates) || null,
+      };
 
     } catch (error) {
       // Handle timeout errors
@@ -1492,3 +1491,27 @@ const acceptableContentTypes = ['text/turtle', 'application/n-triples', 'applica
 const mappedContentTypes = {
   'text/anot+turtle': 'text/turtle',
 }
+
+const SKOS = $rdf.Namespace('http://www.w3.org/2004/02/skos/core#');
+const RDFS = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#')
+const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+const DCT = $rdf.Namespace('http://purl.org/dc/terms/');
+const DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
+const SDO = $rdf.Namespace('https://schema.org/');
+const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
+
+const labelPredicates = [
+  SKOS('prefLabel'),
+  DCT('title'),
+  DC('title'),
+  SDO('name'),
+  FOAF('name'),
+  RDFS('label'),
+];
+
+const descriptionPredicates = [
+  SKOS('definition'),
+  DCT('description'),
+  DC('description'),
+  RDFS('comment'),
+];
