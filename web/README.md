@@ -5,7 +5,7 @@ When you run the application with no config parameter, the default config.json p
 
 __Example:__
 
-- https://kurrawong.github.io/ogc-fl-demo/web/
+- https://ogcincubator.github.io/ogc-fl-demo/web/
 
 ## Configuration JSON specifications
 
@@ -44,7 +44,7 @@ __Example:__
 ### URL param: config=#urlToJSON
 
 __Example:__
-- https://kurrawong.github.io/ogc-fl-demo/web/?config=https://kurrawong.github.io/ogc-fl-demo/web/config-example.json
+- https://ogcincubator.github.io/ogc-fl-demo/web/?config=https://ogcincubator.github.io/ogc-fl-demo/web/config-example.json
 
 __Note:__ This will load the application using the specific config URL
 
@@ -57,4 +57,4 @@ __Note:__ This will load the application using the specific config URL
 - when you click a file (resource), the description in the box in the bottom left provides a link to the displayed file resource
 
 __Example:__
-- https://kurrawong.github.io/ogc-fl-demo/web/?file1=https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish/example_2_1.jsonld
+- https://ogcincubator.github.io/ogc-fl-demo/web/?file1=https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish/example_2_1.jsonld

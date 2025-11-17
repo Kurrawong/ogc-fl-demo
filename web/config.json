@@ -2,21 +2,21 @@
     "title": "OGC Feature Label Demo",
     "about": "Version 2.1",
     "annotations": [
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/semantic-background.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/_geojson.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/owl.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdfs.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/rdf.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sosa.json"
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/semantic-background.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/_geojson.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/owl.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/rdfs.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/rdf.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/sosa.json"
     ],
     "annotationsOGC": [
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/ogc-rainbow.json",
-        "https://raw.githubusercontent.com/Kurrawong/ogc-fl-demo/main/data/annotations/sdo.json"
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/ogc-rainbow.json",
+        "https://raw.githubusercontent.com/ogcincubator/ogc-fl-demo/main/data/annotations/sdo.json"
     ],
     "defaults": {
         "tabCol": 1
     },
-    "helpLink": "https://github.com/Kurrawong/ogc-fl-demo/tree/gh-pages/web#readme",
+    "helpLink": "https://github.com/ogcincubator/ogc-fl-demo/tree/gh-pages/web#readme",
     "labels": {
         "col1": {
             "title": "Raw",
@@ -45,24 +45,19 @@
     },
     "datasets": [
         {
-            "name": "VObserv Feature Ex 1.1",
-            "description": "OGC Vector Observation Feature",
-            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/examples/vectorObservationFeature/example_1_1.json"
+            "name": "Observation - Geopose",
+            "description": "BBlocks Examples - the context document has been constructed using a combination of Features, Observations and GeoPose",
+            "uri": "https://ogcincubator.github.io/bblocks-examples/build/tests/bbr/examples/observation/vectorObservationFeature/example_1_1.jsonld"
+        },
+         {
+            "name": "Observation Collection",
+            "description": "Jellyfish Observations using SOSA model.",
+            "uri": "https://ogcincubator.github.io/iliad-apis-features/build/tests/hosted/iliad/api/features/iliad-jellyfish-features/example_2_1.jsonld"
         },
         {
-            "name": "VObserv Feature Ex 1.1-LD",
-            "description": "OGC Vector Observation Feature 1.1 with @context",
-            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/examples/vectorObservationFeature/example_1_1.jsonld"
-        },
-        {
-            "name": "Observ Example 1.1",
-            "description": "OGC Observation Example 1.1",
-            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/features/observation/example_1_1.json"
-        },
-        {
-            "name": "Observ Example 1.1-LD",
-            "description": "OGC Observation Example 1.1 with @context",
-            "uri": "https://raw.githubusercontent.com/opengeospatial/ogcapi-sosa/master/build/tests/unstable/sosa/features/observation/example_1_1.jsonld"
+          "name": "OGC Record",
+          "description": "An OGC API records items mapped to DCAT",
+          "uri": "https://ogcincubator.github.io/geodcat-ogcapi-records/build/tests/geo/geodcat/geodcat-records/example_1_1.jsonld"
         }
     ]
 }
